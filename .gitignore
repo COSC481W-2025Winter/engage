@@ -14,7 +14,11 @@ dist-ssr
 
 # Editor directories and files
 .vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
 !.vscode/extensions.json
+!.vscode/*.code-snippets
 .idea
 .DS_Store
 *.suo
@@ -22,3 +26,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local history for VS code
+.history/
+
+# Built VS code extensions
+*.vsix
