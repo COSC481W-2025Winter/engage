@@ -1,0 +1,54 @@
+body{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.form{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  justify-items: center;
+  border-radius: 5px;
+  padding: 30px;
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.7);
+}
+
+input[type=text], input[type=password]{
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  width: 300px;
+  border: 1px solid gray
+  padding: 0.5rem;
+  border-radius: 5px;
+}
+
+.button{
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border:none;
+  background: green;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+label{
+  font-size: small;
+  margin-top: 0.5rem;
+}
+
+p{
+  color: blue
+}
+
+.error{
+  color: red;
+}
+
+.success{
+  color: green;
+}
+
+  
