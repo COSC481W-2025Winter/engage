@@ -40,7 +40,8 @@ label{
 }
 
 p{
-  color: blue
+  color: blue;
+  cursor: pointer;
 }
 
 .error{
