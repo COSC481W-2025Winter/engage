@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./Login";
 import Dashboard from "./Dashboard";
 import Protected from "./Protected";
+import Registration from "./Registration";
 
 // import fs from "vite-plugin-fs/browser";
 const videos = import.meta.glob("../media/*.mp4");
@@ -138,6 +139,7 @@ function App() {
           element={<Protected Component={Dashboard} />}
         />
         <Route path="/videoplayer" element={<VideoPlayer />} />
+        <Route path="/registration" element={<Registration />} />
       </Routes>
     </BrowserRouter>
   );
