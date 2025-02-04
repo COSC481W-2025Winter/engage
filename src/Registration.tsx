@@ -48,7 +48,7 @@ function Registration() {
 
   const handleSubmit = () => {
     if (user && email && pass1 && pass2) {
-      const url = "https://localhost/react/registration.php";
+      const url = "https://localhost/php/registration.php";
       const headers = {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -77,7 +77,7 @@ function Registration() {
   };
 
   const checkEmail = () => {
-    const url = "https://localhost/react/checkemail.php";
+    const url = "https://localhost/php/checkemail.php";
     const headers = {
       "Content-Type": "application/json",
       Accept: "application/json",
@@ -96,7 +96,7 @@ function Registration() {
   };
 
   const checkUser = () => {
-    const url = "https://localhost/react/checkuser.php";
+    const url = "https://localhost/php/checkuser.php";
     const headers = {
       "Content-Type": "application/json",
       Accept: "application/json",
