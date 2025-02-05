@@ -91,6 +91,11 @@ function Login() {
       });
   }
 
+  // Navigate to Registration page
+  const goToRegistration = () => {
+    navigate("/registration");
+  };
+
   return (
     <div className="form">
       <p>
@@ -118,6 +123,9 @@ function Login() {
         className="button"
         onClick={loginSubmit}
       />
+      <button onClick={goToRegistration} className="button">
+        Registration
+      </button>
     </div>
   );
 }

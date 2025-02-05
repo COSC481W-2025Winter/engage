@@ -1,5 +1,6 @@
 import "./style.css";
 import { useState, useEffect, ChangeEvent } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Registration() {
   const [user, setUser] = useState<string>("");
@@ -8,6 +9,11 @@ function Registration() {
   const [pass2, setPass2] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [msg, setMsg] = useState<string>("");
+  const navigate = useNavigate();
+
+  const goToLoginPage = () => {
+    navigate("/"); // Navigate to the login page ("/" route)
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -169,6 +175,9 @@ function Registration() {
         className="button"
         onClick={handleSubmit}
       />
+      <button onClick={goToLoginPage} className="button">
+        Go to Login
+      </button>
     </div>
   );
 }

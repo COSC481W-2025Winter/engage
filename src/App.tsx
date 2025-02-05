@@ -2,6 +2,7 @@ import "./App.scss";
 // import VideoPlayer from "./components/VideoPlayer.tsx"
 import ReactPlayer from "react-player";
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 import path from "path-browserify";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -91,6 +92,13 @@ function VideoPlayer() {
   // };
   // setVideoIndex(0);
   // initializeVideoRef();
+
+  // Navigate back to Dashboard
+  const navigate = useNavigate();
+  const handleBackToDashboard = () => {
+    navigate("/dashboard");
+  };
+
   return (
     <div className="app-container">
       <h1>Engage</h1>
@@ -124,6 +132,11 @@ function VideoPlayer() {
           onClick={() => (window.location.href = "/upload.html")}
         >
           ENGAGE <i className="fa-solid fa-upload"></i>
+        </button>
+      </div>
+      <div className="back-to-dashboard">
+        <button className="control-button" onClick={handleBackToDashboard}>
+          Back to Dashboard <i className="fa-solid fa-arrow-left"></i>
         </button>
       </div>
     </div>
