@@ -46,76 +46,80 @@ function Registration() {
     }
   };
 
-  const handleSubmit = () => {
-    if (user && email && pass1 && pass2) {
-      const url = "http://localhost/php/registration.php";
-      const headers = {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      };
-      const Data = { user, email, pass2 };
-      fetch(url, {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify(Data),
-      })
-        .then((response) => response.json())
-        .then((response) => {
-          setMsg(response[0].result);
-        })
-        .catch((err) => {
-          setError(err.message);
-          console.log(err);
-        });
-      setUser("");
-      setEmail("");
-      setPass1("");
-      setPass2("");
-    } else {
+  const handleSubmit = async () => {
+    if (!user || !email || !pass1 || !pass2) {
       setError("All fields are required");
+      return;
+    }
+
+    if (pass1 !== pass2) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost/php/registration.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ user, email, pass: pass2 }),
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        setError(data.error); // Handle error message properly
+      } else if (data.success) {
+        setMsg(data.success);
+        setUser("");
+        setEmail("");
+        setPass1("");
+        setPass2("");
+      } else {
+        setError("Unexpected response from server");
+      }
+    } catch (err) {
+      setError("Failed to register: " + err.message);
     }
   };
 
   const checkEmail = () => {
-    const url = "https://localhost/php/checkemail.php";
-    const headers = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    };
-    const Data = { email: email };
+    const url = "http://localhost/php/checkemail.php";
     fetch(url, {
       method: "POST",
-      headers: headers,
-      body: JSON.stringify({ Data }),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ email }), // Fix: Send email directly
     })
       .then((response) => response.json())
-      .then((response) => setError(response[0].result))
+      .then((response) => setError(response[0]?.result || "Unknown error"))
       .catch((err) => {
-        setError(err.message);
-        console.log(err);
+        setError("Failed to fetch: " + err.message);
+        console.error(err);
       });
   };
 
   const checkUser = () => {
-    const url = "https://localhost/php/checkuser.php";
-    const headers = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    };
-    const Data = { user: user };
+    const url = "http://localhost/php/checkuser.php";
     fetch(url, {
       method: "POST",
-      headers: headers,
-      body: JSON.stringify({ Data }),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ user }), // Fix: Send user directly
     })
       .then((response) => response.json())
-      .then((response) => setError(response[0].result))
+      .then((response) => setError(response[0]?.result || "Unknown error"))
       .catch((err) => {
-        setError(err.message);
-        console.log(err);
+        setError("Failed to fetch: " + err.message);
+        console.error(err);
       });
   };
-
   const checkPassword = () => {
     if (pass1.length < 8) {
       setError("Password must be at least 8 characters long");
