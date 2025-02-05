@@ -1,15 +1,9 @@
-<?php
-$servername = "localhost";  // or 127.0.0.1
-$username = "root";         // default for XAMPP
-$password = "";             // default for XAMPP
-$dbname = "user";  // Name of your database
+// Test password hash manually
+$password = "the_password_you_entered";  // The password you expect to match
+$hash = '$2y$10$OdTcRqnZ5SvhWgU6Yu3dpeKkeRAmuxLIgCSkLmruNep';  // The hash stored in the database
 
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
+if (password_verify($password, $hash)) {
+    echo "Password matches!";
+} else {
+    echo "Password does not match.";
 }
-echo "Connected successfully";
-?>

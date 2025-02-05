@@ -18,73 +18,79 @@ function Login() {
     let loginStatus = localStorage.getItem("loginStatus");
     if (loginStatus) {
       setError(loginStatus);
-      setTimeout(function () {
+      setTimeout(() => {
         localStorage.clear();
         window.location.reload();
       }, 3000);
     }
-    setTimeout(function () {
+    setTimeout(() => {
       setMsg("");
     }, 5000);
   }, [msg]);
+
   const handleInputChange = (e: any, type: string) => {
     switch (type) {
       case "user":
         setError("");
         setUser(e.target.value);
-        if (e.target.value.length === "") {
-          setError("Username is required");
-        }
         break;
       case "pass":
         setError("");
         setPass(e.target.value);
-        if (e.target.value.length === "") {
-          setError("Password is required");
-        }
+        console.log("Password updated:", e.target.value); // Log the password change
         break;
       default:
     }
   };
   function loginSubmit() {
-    if (user !== "" && pass !== "") {
-      var url = "https://localhost/react/login.php";
-      var headers = {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      };
-      var Data = {
-        user: user,
-        pass: pass,
-      };
-      fetch(url, {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify(Data),
-      })
-        .then((response) => response.json())
-        .then((response) => {
-          if (
-            response[0].result === "Invalid username!" ||
-            response[0].result === "Invalid password!"
-          ) {
-            setError(response[0].result);
-          } else {
-            setMsg(response[0].result);
-            setTimeout(function () {
-              localStorage.setItem("login", "true");
-              navigate("/dashboard");
-            }, 5000);
-          }
-        })
-        .catch((err) => {
-          setError(err);
-          console.log(err);
-        });
-    } else {
+    if (user === "" || pass === "") {
       setError("Username and Password are required");
+      return;
     }
+
+    // Debugging: Log the password before sending to the backend
+    console.log("Entered Password (before sending):", pass);
+
+    var url = "http://localhost/php/login.php";
+    var headers = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+    var Data = {
+      user: user,
+      pass: pass,
+    };
+
+    fetch(url, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(Data),
+    })
+      .then((response) => response.json())
+      .then((response) => {
+        if (
+          response[0]?.result === "Invalid username" ||
+          response[0]?.result === "Password is incorrect"
+        ) {
+          setError(response[0]?.result);
+        } else {
+          setMsg(response[0]?.result);
+          setTimeout(() => {
+            localStorage.setItem("login", "true");
+            navigate("/dashboard");
+          }, 5000);
+        }
+
+        // Debugging: Log entered password and stored hash in the console
+        console.log("Entered Password:", response[0]?.enteredPassword);
+        console.log("Stored Hash:", response[0]?.storedHash);
+      })
+      .catch((err) => {
+        setError("Failed to login: " + err.message);
+        console.log(err);
+      });
   }
+
   return (
     <div className="form">
       <p>
