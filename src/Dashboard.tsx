@@ -1,24 +1,23 @@
-import "./style.css";
 import { useNavigate } from "react-router-dom";
 
 function Dashboard() {
   const navigate = useNavigate();
 
+  function navigateToVideoPlayer() {
+    navigate("/videoplayer"); // Navigate to the VideoPlayer page
+  }
+
   function logoutSubmit() {
-    // Remove login information from localStorage
     localStorage.removeItem("login");
-    localStorage.removeItem("userData"); // Optional: Remove any user-specific data
+    localStorage.removeItem("loginStatus"); // Optional: Clear any login status message
 
-    // Optionally, set a message for the user (e.g., "You have logged out successfully")
-    localStorage.setItem("loginStatus", "Logout successfully");
-
-    // Redirect to the login page
-    navigate("/login");
+    navigate("/"); // Redirect to the login page after logout
   }
 
   return (
     <div className="form">
       <h3>Dashboard Page</h3>
+      <button onClick={navigateToVideoPlayer}>Go to Video Player</button>
       <p onClick={logoutSubmit}>Logout</p>
     </div>
   );

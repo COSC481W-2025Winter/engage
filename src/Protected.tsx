@@ -1,16 +1,18 @@
-import { userEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const Protected = (props) => {
+const Protected = (props: any) => {
   const navigate = useNavigate();
   const { Component } = props;
-  userEffect(() => {
+
+  useEffect(() => {
     let login = localStorage.getItem("login");
-    if (!login) {
+    if (!login || login !== "true") {
       localStorage.setItem("loginStatus", "Please login");
-      navigate("/", { replace: true });
+      navigate("/", { replace: true }); // Redirect to login page
     }
-  }, []);
+  }, [navigate]);
+
   return <Component />;
 };
 
