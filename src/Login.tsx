@@ -78,7 +78,7 @@ function Login() {
           setTimeout(() => {
             localStorage.setItem("login", "true");
             navigate("/dashboard");
-          }, 5000);
+          }, 1000);
         }
 
         // Debugging: Log entered password and stored hash in the console
