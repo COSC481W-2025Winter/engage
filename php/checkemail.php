@@ -1,7 +1,7 @@
 <?php
-  header(("Access-Control-Allow-Origin: *"));
-  header(("Access-Control-Allow-Methods: GET,POST"));
-  header(("Access-Control-Allow-Headers: Content-Type"));
+  header("Access-Control-Allow-Origin: *");
+  header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+  header("Access-Control-Allow-Headers: Content-Type, Accept");
 
   $con = new mysqli("localhost", "react-user", "1234", "user");
   if(mysqli_connect_error()){
@@ -14,10 +14,10 @@
     $email = $dData['email'];
 
     if($email != ""){
-      $sql = "SELECT * FROM user WHERE email = '$email';";
+      $sql = "SELECT * FROM user WHERE user = '$email';";
       $res = mysqli_query($con, $sql);
       if(mysqli_num_rows($res) != 0){
-        $result = "Email already registered";
+        $result = "Email is already registered";
     }
     else{
       $result = "";

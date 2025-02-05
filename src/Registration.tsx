@@ -48,7 +48,7 @@ function Registration() {
 
   const handleSubmit = () => {
     if (user && email && pass1 && pass2) {
-      const url = "https://localhost/php/registration.php";
+      const url = "http://localhost/php/registration.php";
       const headers = {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -56,7 +56,7 @@ function Registration() {
       const Data = { user, email, pass2 };
       fetch(url, {
         method: "POST",
-        headers,
+        headers: headers,
         body: JSON.stringify(Data),
       })
         .then((response) => response.json())
@@ -65,7 +65,7 @@ function Registration() {
         })
         .catch((err) => {
           setError(err.message);
-          console.error(err);
+          console.log(err);
         });
       setUser("");
       setEmail("");
@@ -82,16 +82,17 @@ function Registration() {
       "Content-Type": "application/json",
       Accept: "application/json",
     };
+    const Data = { email: email };
     fetch(url, {
       method: "POST",
-      headers,
-      body: JSON.stringify({ email }),
+      headers: headers,
+      body: JSON.stringify({ Data }),
     })
       .then((response) => response.json())
       .then((response) => setError(response[0].result))
       .catch((err) => {
         setError(err.message);
-        console.error(err);
+        console.log(err);
       });
   };
 
@@ -101,16 +102,17 @@ function Registration() {
       "Content-Type": "application/json",
       Accept: "application/json",
     };
+    const Data = { user: user };
     fetch(url, {
       method: "POST",
-      headers,
-      body: JSON.stringify({ user }),
+      headers: headers,
+      body: JSON.stringify({ Data }),
     })
       .then((response) => response.json())
       .then((response) => setError(response[0].result))
       .catch((err) => {
         setError(err.message);
-        console.error(err);
+        console.log(err);
       });
   };
 

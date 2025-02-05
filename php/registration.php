@@ -1,7 +1,7 @@
 <?php
-  header(("Access-Control-Allow-Origin: *"));
-  header(("Access-Control-Allow-Methods: GET,POST"));
-  header(("Access-Control-Allow-Headers: Content-Type"));
+  header("Access-Control-Allow-Origin: *");
+  header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+  header("Access-Control-Allow-Headers: Content-Type, Accept");
 
   $con = new mysqli("localhost", "react-user", "1234", "user");
   if(mysqli_connect_error()){
