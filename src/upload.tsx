@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./upload.scss"; // Import the updated styles
+import "./styles/upload.scss"; // Import the updated styles
 import FileUploader from "./components/FileUploader";
 
 function Upload() {

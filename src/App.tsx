@@ -1,4 +1,4 @@
-import './App.scss';
+import './styles/App.scss';
 // import VideoPlayer from "./components/VideoPlayer.tsx"
 import ReactPlayer from "react-player";
 import { useState, useEffect, useRef } from 'react';
@@ -54,7 +54,7 @@ const array: Array<string | null> = await createVideoArray();
 randomizeArray(array);
 
 const filteredArray = array.filter((item) => item !== undefined);
-console.log(filteredArray);
+// console.log(filteredArray);
 
 
 
@@ -77,7 +77,7 @@ function App() {
   // }
   const handleNext = () => {
     setVideoIndex((prevIndex) => (prevIndex + initState) % filteredArray.length)
-    console.log(videoIndex)
+    // console.log(videoIndex)
   };
 
   // const handlePrevious = () => {
