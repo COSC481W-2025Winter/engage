@@ -1,10 +1,10 @@
 import { ChangeEvent, useState } from "react";
 import axios from "axios";
 import "dotenv";
-import "mysql2";
+// import "mysql2";
 
-let uploadServer = "http://localhost:3000/upload"
-if(import.meta.env.VITE_UPLOAD_SERVER !== undefined){
+let uploadServer = "http://localhost:3000/upload";
+if (import.meta.env.VITE_UPLOAD_SERVER !== undefined) {
   // console.log(import.meta.env.VITE_UPLOAD_SERVER);
   uploadServer = import.meta.env.VITE_UPLOAD_SERVER;
 }
@@ -35,20 +35,20 @@ export default function FileUploader() {
   }
   function isMP4(file: File) {
     const fileName: string = file.name;
-    const fileExtension = fileName?.split('.').pop()?.toLowerCase();
-    return fileExtension === 'mp4';
+    const fileExtension = fileName?.split(".").pop()?.toLowerCase();
+    return fileExtension === "mp4";
   }
 
   async function handleFileUpload() {
     if (!file) return;
     console.log("File size: " + file.size);
     console.log("Max file size: " + MAX_FILE_SIZE);
-    if(!isMP4(file)){
-      alert('File is not an mp4.');
+    if (!isMP4(file)) {
+      alert("File is not an mp4.");
       return;
     }
-    if(file.size > MAX_FILE_SIZE) {
-      alert('File is too big. Max file size is 80MB');
+    if (file.size > MAX_FILE_SIZE) {
+      alert("File is too big. Max file size is 80MB");
       return;
     }
 
@@ -80,7 +80,7 @@ export default function FileUploader() {
     <div>
       <br></br>
       <label htmlFor="title">Title: </label>
-      <input name="title" onChange={handleTitleChange}/>
+      <input name="title" onChange={handleTitleChange} />
       <br></br>
       <label htmlFor="desc">Description: </label>
       <input name="desc" onChange={handleDescChange} />
