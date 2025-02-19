@@ -41,7 +41,7 @@ const Signup: React.FC = () => {
         .then(() => {
           setSuccessMessage("You have successfully signed up! Redirecting...");
           setTimeout(() => {
-            navigate("/"); // Redirect after 1.5 seconds
+            navigate("/login"); // Redirect after 1.5 seconds
           }, 1500);
           setName("");
           setEmail("");
@@ -55,9 +55,11 @@ const Signup: React.FC = () => {
             if (error.response.status === 409) {
               setErrorMessage(error.response.data.message); // Sets error message to error message as written in route
             } else {
-              setErrorMessage("An unexpected error occurred. Please try again.");
-            }        
-          }   
+              setErrorMessage(
+                "An unexpected error occurred. Please try again."
+              );
+            }
+          }
         });
     }
   };
