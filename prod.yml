@@ -1,0 +1,75 @@
+services:
+  engage:
+    image: engage:latest
+    build:
+      context: .
+      dockerfile: engage.dockerfile
+    # env_file: ".env"
+    ports:
+      - "8085:5173"
+      # - "7070:7070"
+    environment:
+      - VITE_UPLOAD_SERVER=https://upload.ngage.lol
+      - VITE_LOGIN_SERVER=https://login.ngage.lol
+    volumes:
+      - ./media:/app/media
+    depends_on:
+      upload-server:
+        condition: service_healthy
+      login-server:
+        condition: service_started
+    restart: unless-stopped
+  upload-server:
+    image: upload-server:latest
+    environment:
+      - DATABASE_HOST=db
+    build:
+      context: .
+      dockerfile: upload-server.dockerfile
+    volumes:
+     - ./media:/usr/src/app/media
+    ports:
+      - "3001:3001" # for upload server
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "http://localhost:3001/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+  login-server:
+    image: login-server:latest
+    environment:
+      - DATABASE_HOST=db
+    build:
+      context: .
+      dockerfile: login-server.dockerfile
+    volumes:
+     - ./media:/usr/src/app/media
+    ports:
+      - "8081:8081"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
+      MYSQL_ROOT_PASSWORD: pass123
+      MYSQL_DATABASE: engage
+      MYSQL_USER: engageuser
+      MYSQL_PASSWORD: engagepassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data:/var/lib/mysql
+      - ./initdb:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
