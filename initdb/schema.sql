@@ -27,3 +27,12 @@ CREATE TABLE likes (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (video_id) REFERENCES videos(id) ON DELETE CASCADE
 );
+CREATE TABLE video_views (
+    id int AUTO_INCREMENT,
+    video_id int NOT NULL,
+    user_id int, -- Can be NULL for anonymous views
+    viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(id),
+    FOREIGN KEY (video_id) REFERENCES videos(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);

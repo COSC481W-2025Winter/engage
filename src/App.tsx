@@ -123,11 +123,13 @@ function Home() {
   const [userID, setUserID] = useState(0);
   const [likeCount, setLikeCount] = useState(0);
   const [liked, setLiked] = useState(false);
+  const [viewCount, setViewCount] = useState(0);
+  const [viewRecorded, setViewRecorded] = useState(false);
 
   useEffect(() => {
     // Immediately reset states when changing videos
     setLiked(false);
-    setLikeCount(0);
+    setViewRecorded(false);
 
     // Set the current video
     setCurrentVideo(filteredArray[videoIndex] || "");
@@ -141,6 +143,7 @@ function Home() {
     if (currentVideo) {
       console.log("Video changed to:", currentVideo.split("/").pop());
       getLikeCount();
+      getViewCount();
       // Only check if user has liked if they're logged in
       if (loggedIn && userID) {
         checkIfLiked();
@@ -210,7 +213,7 @@ function Home() {
       desc = "No description provided";
     }
     alert(
-      `Title: ${title}\n--------------------------\nDescription: ${desc}\n--------------------------\nCreator: ${creatorName}`
+      `Title: ${title}\n--------------------------\nDescription: ${desc}\n--------------------------\nCreator: ${creatorName}\n--------------------------\nViews: ${viewCount}`
     );
   }
 
@@ -371,6 +374,63 @@ function Home() {
     }
   }
 
+  async function getViewCount() {
+    try {
+      const fileName = currentVideo.split("/").pop();
+      if (!fileName) {
+        console.error("Error: fileName is missing.");
+        return;
+      }
+
+      const response = await axios.get(
+        `${loginServer}/video-views/${fileName}`
+      );
+      setViewCount(response.data.viewCount);
+    } catch (error) {
+      console.error("Error fetching view count:", error);
+      setViewCount(0); // Default to 0 if there's an error
+    }
+  }
+
+  async function recordView() {
+    try {
+      if (viewRecorded) return; // Prevent multiple view records for the same video session
+
+      const fileName = currentVideo.split("/").pop();
+      if (!fileName) {
+        console.error("Error: fileName is missing.");
+        return;
+      }
+
+      if (loggedIn) {
+        const token = localStorage.getItem("authToken");
+        if (!token) return;
+
+        // For logged-in users
+        await axios.post(
+          `${loginServer}/record-view`,
+          { fileName },
+          {
+            params: { auth: token },
+          }
+        );
+      } else {
+        // For anonymous users
+        await axios.post(`${loginServer}/record-anonymous-view`, { fileName });
+      }
+
+      // Update view count locally after recording
+      setViewCount((prev) => prev + 1);
+      setViewRecorded(true);
+    } catch (error) {
+      console.error("Error recording view:", error);
+    }
+  }
+
+  const handleVideoStart = () => {
+    recordView();
+  };
+
   return (
     <div className="app-container">
       <h1>Engage</h1>
@@ -385,11 +445,17 @@ function Home() {
           playsinline={true}
           width="80vw"
           height="60vh"
+          onStart={handleVideoStart}
         />
       </div>
-      <button onClick={handleLike} style={{ color: liked ? "red" : "black" }}>
-        <i className="fa-solid fa-heart"></i> {likeCount} Likes
-      </button>
+      <div className="video-stats">
+        <button onClick={handleLike} style={{ color: liked ? "red" : "black" }}>
+          <i className="fa-solid fa-heart"></i> {likeCount} Likes
+        </button>
+        <span className="view-count">
+          <i className="fa-solid fa-eye"></i> {viewCount} Views
+        </span>
+      </div>
 
       {/* 1. Video control buttons */}
       <div className="controls">
