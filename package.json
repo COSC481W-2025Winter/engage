@@ -6,7 +6,7 @@
   "scripts": {
     "init-media": "npx mkdirp media",
     "server": "node upload-server.js",
-    "dev": "npm run init-media && concurrently 'nodemon login-server.js' 'nodemon upload-server.js' 'vite'",
+    "dev": "npm run init-media && concurrently \"nodemon login-server.js\" \"nodemon upload-server.js\" \"vite\"",
     "dev-host": "npm run init-media && concurrently 'nodemon login-server.js' 'nodemon upload-server.js' 'vite --host'",
     "docker": "vite",
     "build": "tsc -b && vite build",

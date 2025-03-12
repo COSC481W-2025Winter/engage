@@ -1,11 +1,10 @@
 // Import necessary dependencies
-import './styles/User.scss'; // Import styles for component layout
-import { useState, useEffect } from 'react'; // React hook for managing state
-import { useNavigate } from 'react-router-dom'; // Hook for programmatic navigation
-import { motion, AnimatePresence } from 'framer-motion'; // Animation library for smooth UI transitions
-import { useSwipeable } from 'react-swipeable'; // Library for handling touch and mouse swipe gestures
+import "./styles/User.scss"; // Import styles for component layout
+import { useState, useEffect } from "react"; // React hook for managing state
+import { useNavigate } from "react-router-dom"; // Hook for programmatic navigation
+import { motion, AnimatePresence } from "framer-motion"; // Animation library for smooth UI transitions
+import { useSwipeable } from "react-swipeable"; // Library for handling touch and mouse swipe gestures
 import axios from "axios";
-
 
 // Define the props interface for the `User` component
 // interface UserProps {
@@ -20,7 +19,7 @@ if (import.meta.env.VITE_UPLOAD_SERVER !== undefined) {
   // console.log(import.meta.env.VITE_UPLOAD_SERVER);
   uploadServer = import.meta.env.VITE_UPLOAD_SERVER;
 }
-let loginServer = "http://localhost:8081"
+let loginServer = "http://localhost:8081";
 
 if (import.meta.env.VITE_LOGIN_SERVER !== undefined) {
   // console.log(import.meta.env.VITE_UPLOAD_SERVER);
@@ -32,76 +31,75 @@ function User() {
   const [userVideos, setUserVideos] = useState<string[]>([]);
   const [username, setUsername] = useState("");
   const [userID, setUserID] = useState(0);
-  
-    async function loadUserVideos(){
-      const token = localStorage.getItem("authToken");
-      if (token) {
-        const userVideoArray: string[] = [];
-        try {
-          const response = await axios.get(`${loginServer}/get-user-videos`, {
-            params: {
-              auth: token ? token : "",
-            }
-          });
-          response.data.videos.forEach((element: { fileName: string }) => {
-            userVideoArray.push("./media/" + element.fileName);
-          });
-          // console.log(userVideoArray);
-          setUserVideos(userVideoArray as string[]);
-        }
-        catch (error) {
-          console.error("Error fetching user videos:", error);
-        }
-      }
-    
-    };
-  
-    useEffect(() => {
-      loadUserVideos();
-    }, []);
 
-    // Get logged in user ID
-    async function getLoggedInUserId(){
-      const token = localStorage.getItem("authToken");
-      if (token) {
-        try {
-          await axios.get(`${loginServer}/current-user-id`, {
+  async function loadUserVideos() {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      const userVideoArray: string[] = [];
+      try {
+        const response = await axios.get(`${loginServer}/get-user-videos`, {
+          params: {
+            auth: token ? token : "",
+          },
+        });
+        response.data.videos.forEach((element: { fileName: string }) => {
+          userVideoArray.push("./media/" + element.fileName);
+        });
+        // console.log(userVideoArray);
+        setUserVideos(userVideoArray as string[]);
+      } catch (error) {
+        console.error("Error fetching user videos:", error);
+      }
+    }
+  }
+
+  useEffect(() => {
+    loadUserVideos();
+  }, []);
+
+  // Get logged in user ID
+  async function getLoggedInUserId() {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      try {
+        await axios
+          .get(`${loginServer}/current-user-id`, {
             params: {
               auth: token ? token : "",
-            }
-          }).then(response => {
+            },
+          })
+          .then((response) => {
             // id = response.data.userId;
             setUserID(response.data.userId as number);
-          })
-          // userChanged = true;
-          
-        } catch (error) {
-          console.error("Error fetching user ID:", error);
-          return null;
-        }
-      } else {
+          });
+        // userChanged = true;
+      } catch (error) {
+        console.error("Error fetching user ID:", error);
         return null;
       }
+    } else {
+      return null;
     }
+  }
 
-    async function getUsername(userid: number){
-      let username = ""
-      await axios.get(`${uploadServer}/user`, {
-        params:{
-          userID: userid
-        }
+  async function getUsername(userid: number) {
+    let username = "";
+    await axios
+      .get(`${uploadServer}/user`, {
+        params: {
+          userID: userid,
+        },
       })
-      .then(response => {
+      .then((response) => {
         username = response.data.username;
-      })
-      setUsername(username as string);
-    }
+      });
+    setUsername(username as string);
+  }
 
-    useEffect(() => {
-      getLoggedInUserId();
-      getUsername(userID);
-    },)
-
+  useEffect(() => {
+    getLoggedInUserId();
+    getUsername(userID);
+  });
 
   const navigate = useNavigate(); // Hook for navigating between routes
 
@@ -183,20 +181,27 @@ function User() {
 
   // Calculate the index range of videos for the current page
   const startIndex = currentPage * VIDEOS_PER_PAGE;
-  const currentVideos = userVideos.slice(startIndex, startIndex + VIDEOS_PER_PAGE);
+  const currentVideos = userVideos.slice(
+    startIndex,
+    startIndex + VIDEOS_PER_PAGE
+  );
 
   return (
     <div className="user-page-wrapper">
       {/* Main content container with swipe handlers */}
       <div
-        className={`user-container ${selectedVideo ? 'blur' : ''} ${isJittering ? 'jitter' : ''}`}
+        className={`user-container ${selectedVideo ? "blur" : ""} ${
+          isJittering ? "jitter" : ""
+        }`}
         {...handlers}
       >
-        <p style={{ color: 'white', padding: '0px', top: '0' }}>Swipe left and right to navigate</p>
+        <p style={{ color: "white", padding: "0px", top: "0" }}>
+          Swipe left and right to navigate
+        </p>
         <div className="content-container">
           {/* Section title */}
           <div className="my-videos-container">My Engagements</div>
-          
+
           {/* AnimatePresence ensures smooth transition between pages */}
           <AnimatePresence mode="popLayout">
             <motion.div
@@ -233,10 +238,13 @@ function User() {
 
           {/* Home button for navigation */}
           <div className="user-buttons">
-            <button className="home-button" onClick={() => navigate('/')}>Home</button>
-            <button className="home-button btn-danger" onClick={handleLogout}>Logout</button>
+            <button className="home-button" onClick={() => navigate("/")}>
+              Home
+            </button>
+            <button className="home-button btn-danger" onClick={handleLogout}>
+              Logout
+            </button>
           </div>
-          
         </div>
 
         {/* Display username at the bottom */}

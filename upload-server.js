@@ -13,7 +13,7 @@ const port = 3001;
 const { spawn } = child_process;
 
 let dbHost = "localhost";
-if(process.env.DATABASE_HOST){
+if (process.env.DATABASE_HOST) {
   dbHost = process.env.DATABASE_HOST;
 }
 
@@ -68,11 +68,11 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
   // console.log("Request body:", req.body);
   // console.log("Decoded JWT:", req.user);
   // Delete the video file from the server
-  
-  const filePath = path.join('./media', req.file.filename);
-  const outputPath = filePath.replace('.mp4', 'trans.mp4');
-  
-  const outputFile = req.file.filename.replace('.mp4', 'trans.mp4');
+
+  const filePath = path.join("./media", req.file.filename);
+  const outputPath = filePath.replace(".mp4", "trans.mp4");
+
+  const outputFile = req.file.filename.replace(".mp4", "trans.mp4");
 
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded" });
@@ -105,18 +105,23 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
   }
 
   // transcode media
-  const ffmpeg = spawn('ffmpeg', [
-    '-i', filePath,
-    '-c:v', 'libx264',
-    '-preset', 'slow',
-    '-crf', '22',
-    '-c:a', 'copy',
-    outputPath
+  const ffmpeg = spawn("ffmpeg", [
+    "-i",
+    filePath,
+    "-c:v",
+    "libx264",
+    "-preset",
+    "slow",
+    "-crf",
+    "22",
+    "-c:a",
+    "copy",
+    outputPath,
   ]);
-  ffmpeg.stderr.on('data', (data) => {
+  ffmpeg.stderr.on("data", (data) => {
     console.error(`stderr: ${data}`);
   });
-  ffmpeg.on('close', (code) => {
+  ffmpeg.on("close", (code) => {
     console.log(code);
     if (code === 0) {
       // const file = fs.readFileSync(outputPath);
@@ -138,9 +143,7 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
           console.log("File deleted successfully");
         }
       });
-      return res
-      .status(400)
-      .json({ message: "Transcoding failed" });
+      return res.status(400).json({ message: "Transcoding failed" });
     }
     fs.unlink(filePath, (err) => {
       if (err) {
@@ -149,7 +152,6 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
         console.log("File deleted successfully");
       }
     });
-    
   });
 
   const db = dbRequest(dbHost);
@@ -201,8 +203,7 @@ app.get("/user", (req, res) => {
     db.destroy();
     return res.status(200).json(results[0]);
   });
-}
-);
+});
 // Get Video info
 app.get("/video", (req, res) => {
   const db = dbRequest(dbHost);
