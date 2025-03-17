@@ -286,6 +286,33 @@ app.post("/post-comment", authenticateToken, async (req, res) => {
   }
 });
 
+app.post("/post-reply", authenticateToken, async (req, res) => {
+  const db = dbRequest(dbHost);
+  const { user_id, video_id, comment_id, content } = req.body;
+  
+
+  if (!user_id || !video_id || !comment_id) {
+    db.destroy();
+    return res.status(400).json({ message: "Video ID, user id, and comment are required" });
+  }
+
+  try {
+    // Insert comment with video_id
+    const insertQuery = "INSERT INTO reply (user_id, video_id, content, comment_id) VALUES (?, ?, ?, ?)";
+    await db.promise().query(insertQuery, [userId, video_id, content, comment_id]);
+
+    console.log("Reply successfully stored in database!");
+    db.destroy();
+    return res.status(200).json({ message: "Reply posted successfully!" });
+  } catch (error) {
+    console.error("Error inserting reply:", error);
+    db.destroy();
+    return res.status(500).json({ message: "Database error", error });
+  }
+});
+
+
+
 
 app.get("/get-comments", async (req, res) => {
   const db = dbRequest(dbHost);

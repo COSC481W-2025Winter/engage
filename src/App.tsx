@@ -169,6 +169,7 @@ function Home() {
 
   // Switch to the next video in the array
   const handleNext = () => {
+    toggleComments();
     setVideoIndex(
       (prevIndex) => (prevIndex + initState) % filteredArray.length
     );
@@ -556,11 +557,13 @@ function Home() {
         const replyIcon = document.createElement("i");
         replyIcon.classList.add("fa-regular", "fa-comments", "reply-icon");
 
+        const replyDiv = document.createElement("div");
+
         replyIcon.addEventListener("click", () => {
           let existingReplyBox = commentDiv.querySelector(".reply-box");
         
           if (existingReplyBox) {
-            // If reply box exists, remove it (hide it)
+            // If reply box exists, remove it
             existingReplyBox.remove();
           } else {
             // Create a new input field for replying
@@ -568,19 +571,25 @@ function Home() {
             replyBox.type = "text";
             replyBox.placeholder = "Write a reply...";
             replyBox.classList.add("reply-box"); // Add class for styling
+            
+            const replySendIcon = document.createElement("i");
+            replySendIcon.classList.add("fa-solid", "fa-paper-plane", "reply-send-icon");
         
             // Append reply box below the comment
             commentDiv.appendChild(replyBox);
+            commentDiv.appendChild(replySendIcon);
           }
         });
 
-  
-      // Append elements to comment div
-      commentDiv.appendChild(commentText);
-      commentDiv.appendChild(replyIcon);
 
-      // Append the new div to the container
-      commentBox.appendChild(commentDiv);
+
+    
+        // Append elements to comment div
+        commentDiv.appendChild(commentText);
+        commentDiv.appendChild(replyIcon);
+
+        // Append the new div to the container
+        commentBox.appendChild(commentDiv);
       });
       
     } catch (error) {
