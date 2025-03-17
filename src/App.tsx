@@ -557,7 +557,17 @@ function Home() {
         const replyIcon = document.createElement("i");
         replyIcon.classList.add("fa-regular", "fa-comments", "reply-icon");
 
-        const replyDiv = document.createElement("div");
+                // Append the new div to the container
+        commentBox.appendChild(commentDiv);
+
+        // Append elements to comment div
+        commentDiv.appendChild(commentText);
+        commentDiv.appendChild(replyIcon);
+
+        const replyField = document.createElement("div");
+        replyField.classList.add("reply-field");
+
+        commentDiv.appendChild(replyField);
 
         replyIcon.addEventListener("click", () => {
           let existingReplyBox = commentDiv.querySelector(".reply-box");
@@ -574,22 +584,17 @@ function Home() {
             
             const replySendIcon = document.createElement("i");
             replySendIcon.classList.add("fa-solid", "fa-paper-plane", "reply-send-icon");
-        
-            // Append reply box below the comment
-            commentDiv.appendChild(replyBox);
-            commentDiv.appendChild(replySendIcon);
+
+            // Append replyBox and send icon to replyField
+            replyField.appendChild(replyBox);
+            replyField.appendChild(replySendIcon);
+            
           }
         });
 
 
 
-    
-        // Append elements to comment div
-        commentDiv.appendChild(commentText);
-        commentDiv.appendChild(replyIcon);
 
-        // Append the new div to the container
-        commentBox.appendChild(commentDiv);
       });
       
     } catch (error) {
