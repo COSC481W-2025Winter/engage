@@ -1,4 +1,4 @@
-import "./styles/App.scss"; // Import global and App-specific styles
+import "./styles/App.scss";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Login from "./login.tsx";
@@ -88,12 +88,14 @@ function Home() {
   const [notification, setNotification] = useState("");
   const [comment, setComment] = useState("");
 
-  // Comment type now includes an id, username, comment text, created_at, and optional replies.
+  // Updated comment interface to include likeCount and liked status
   interface CommentType {
     id: number;
     username: string;
     comment: string;
     created_at: string;
+    likeCount?: number;
+    liked?: boolean;
     replies?: ReplyType[];
   }
   interface ReplyType {
@@ -105,9 +107,6 @@ function Home() {
   const [comments, setComments] = useState<CommentType[]>([]);
 
   // For reply functionality:
-  // - replyInputs holds reply text per comment.
-  // - replyVisible toggles showing the reply input field.
-  // - repliesVisible toggles showing/hiding the entire replies list.
   const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
   const [replyVisible, setReplyVisible] = useState<{ [key: number]: boolean }>({});
   const [repliesVisible, setRepliesVisible] = useState<{ [key: number]: boolean }>({});
@@ -342,9 +341,9 @@ function Home() {
   }
 
   // Toggle the comment section using the COMMENT button.
+  // Modified to simply toggle visibility without re-fetching comments.
   const toggleComments = () => {
     setShowComments((prev) => !prev);
-    if (!showComments) displayComments();
   };
 
   // Post a comment and refresh the comments list.
@@ -378,17 +377,48 @@ function Home() {
     displayComments();
   };
 
-  const handleVideoStart = () => {
-    recordView();
-  };
+  // New function to toggle the like status of a comment
+  async function toggleCommentLike(commentId: number) {
+    if (!loggedIn) {
+      alert("You must be logged in to like a comment.");
+      return;
+    }
+    const token = localStorage.getItem("authToken");
+    try {
+      const response = await axios.post(
+        `${uploadServer}/toggle-comment-like`,
+        { comment_id: commentId },
+        { headers: { Authorization: token } }
+      );
+      // Update local state for the toggled comment.
+      setComments((prevComments) =>
+        prevComments.map((comment) => {
+          if (comment.id === commentId) {
+            if (response.data.message === "Comment liked") {
+              return { ...comment, liked: true, likeCount: (comment.likeCount || 0) + 1 };
+            } else {
+              return { ...comment, liked: false, likeCount: Math.max((comment.likeCount || 1) - 1, 0) };
+            }
+          }
+          return comment;
+        })
+      );
+    } catch (error) {
+      console.error("Error toggling comment like:", error);
+      alert("Failed to toggle comment like. Please try again.");
+    }
+  }
 
   // Fetch comments along with their replies.
   async function displayComments() {
     try {
       const fileName = currentVideo.split("/").pop();
       if (!fileName) return;
+      const token = localStorage.getItem("authToken");
+      const headers = token ? { Authorization: token } : {};
       const response = await axios.get(`${uploadServer}/get-comments`, {
         params: { fileName },
+        headers,
       });
       const fetchedComments = response.data;
       const commentsWithUsernames = await Promise.all(
@@ -422,6 +452,8 @@ function Home() {
             username: userResponse.data.username,
             comment: comment.content,
             created_at: comment.created_at,
+            likeCount: comment.likeCount || 0,
+            liked: comment.liked || false,
             replies: replies,
           };
         })
@@ -481,7 +513,7 @@ function Home() {
           playsinline={true}
           width="80vw"
           height="60vh"
-          onStart={handleVideoStart}
+          onStart={recordView}
         />
       </div>
       <div className="video-stats">
@@ -499,7 +531,6 @@ function Home() {
         <div className="control-button" onClick={getVideoInfo}>
           <i className="fas fa-info-circle"></i> VIDEO INFO
         </div>
-        {/* The COMMENT button toggles the entire comment section */}
         <button className="control-button" onClick={toggleComments}>
           COMMENT <i className="fa-solid fa-comment"></i>
         </button>
@@ -512,7 +543,7 @@ function Home() {
           ENGAGE <i className="fa-solid fa-upload"></i>
         </button>
       </div>
-      <div className="back-button-section">{/* Removed VIDEO INFO button */}</div>
+      <div className="back-button-section"></div>
       <div className="login-button-section">
         <button
           className="control-button"
@@ -528,7 +559,6 @@ function Home() {
             </>
           )}
         </button>
-        {/* Comment Section toggled by the COMMENT button */}
         {showComments && (
           <div
             className="comment-section"
@@ -558,26 +588,29 @@ function Home() {
                   <p>
                     <strong>{c.username}</strong> ({c.created_at}): {c.comment}
                   </p>
-                  {/* Toggle button for showing/hiding replies using icons */}
+                  {/* Comment like button */}
+                  <button
+                    onClick={() => toggleCommentLike(c.id)}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      color: c.liked ? "red" : "black",
+                      fontSize: "1.1em",
+                    }}
+                  >
+                    <i className="fa-solid fa-heart"></i> {c.likeCount || 0}
+                  </button>
+                  {/* Toggle replies */}
                   {c.replies && c.replies.length > 0 && (
                     <button
                       onClick={() => toggleRepliesVisible(c.id)}
-                      style={{
-                        border: "none",
-                        background: "transparent",
-                        cursor: "pointer",
-                      }}
+                      style={{ border: "none", background: "transparent", cursor: "pointer" }}
                     >
                       {repliesVisible[c.id] ? (
-                        <i
-                          className="fa-solid fa-chevron-up"
-                          style={{ fontSize: "1.2em", color: "#333" }}
-                        ></i>
+                        <i className="fa-solid fa-chevron-up" style={{ fontSize: "1.2em", color: "#333" }}></i>
                       ) : (
-                        <i
-                          className="fa-solid fa-chevron-down"
-                          style={{ fontSize: "1.2em", color: "#333" }}
-                        ></i>
+                        <i className="fa-solid fa-chevron-down" style={{ fontSize: "1.2em", color: "#333" }}></i>
                       )}
                     </button>
                   )}
@@ -590,10 +623,18 @@ function Home() {
                       ))}
                     </div>
                   )}
-                  {/* Toggle the reply input for each comment */}
-                  <button onClick={() => toggleReplyInput(c.id)}><i className="fa-regular fa-comments"></i></button>
+                  <button onClick={() => toggleReplyInput(c.id)}>
+                    <i className="fa-regular fa-comments"></i>
+                  </button>
                   {replyVisible[c.id] && (
-                    <div style={{ marginLeft: "20px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div
+                      style={{
+                        marginLeft: "20px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
                       <input
                         type="text"
                         value={replyInputs[c.id] || ""}
@@ -605,7 +646,9 @@ function Home() {
                         }
                         placeholder="Write a reply..."
                       />
-                      <button onClick={() => postReply(c.id)}><i className="fa-regular fa-paper-plane"></i></button>
+                      <button onClick={() => postReply(c.id)}>
+                        <i className="fa-regular fa-paper-plane"></i>
+                      </button>
                     </div>
                   )}
                 </div>

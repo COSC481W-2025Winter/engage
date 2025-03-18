@@ -314,4 +314,44 @@ app.get("/get-replies", async (req, res) => {
 // Start the server
 app.listen(port, () => {
   console.log(`Upload Server is running at http://localhost:${port}`);
+})
+// Add this endpoint below your other comment endpoints (e.g., after "/post-reply" or "/get-replies")
+app.post("/toggle-comment-like", authenticateToken, async (req, res) => {
+  const db = dbRequest(dbHost);
+  const { comment_id } = req.body;
+  const userId = req.user.userId;
+
+  if (!comment_id) {
+    db.destroy();
+    return res.status(400).json({ message: "Comment ID is required" });
+  }
+  try {
+    // Check if this comment is already liked by the user
+    const [rows] = await db.promise().query(
+      "SELECT * FROM comment_likes WHERE comment_id = ? AND user_id = ?",
+      [comment_id, userId]
+    );
+    if (rows.length > 0) {
+      // Already liked – remove the like (unlike)
+      await db.promise().query(
+        "DELETE FROM comment_likes WHERE comment_id = ? AND user_id = ?",
+        [comment_id, userId]
+      );
+      db.destroy();
+      return res.status(200).json({ message: "Comment unliked" });
+    } else {
+      // Not yet liked – add a like entry
+      await db.promise().query(
+        "INSERT INTO comment_likes (comment_id, user_id) VALUES (?, ?)",
+        [comment_id, userId]
+      );
+      db.destroy();
+      return res.status(200).json({ message: "Comment liked" });
+    }
+  } catch (error) {
+    console.error("Error toggling comment like:", error);
+    db.destroy();
+    return res.status(500).json({ message: "Database error", error });
+  }
 });
+
