@@ -105,6 +105,8 @@ function Home() {
     created_at: string;
   }
   const [comments, setComments] = useState<CommentType[]>([]);
+  // Cache comment state per video (keyed by currentVideo path)
+  const [commentsByVideo, setCommentsByVideo] = useState<{ [key: string]: CommentType[] }>({});
 
   // For reply functionality:
   const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
@@ -130,6 +132,7 @@ function Home() {
     setCurrentVideo(filteredArray[videoIndex] || "");
   }, [videoIndex]);
 
+  // When currentVideo changes, check if we already have cached comments.
   useEffect(() => {
     if (currentVideo) {
       console.log("Video changed to:", currentVideo.split("/").pop());
@@ -138,9 +141,9 @@ function Home() {
       if (loggedIn && userID) {
         checkIfLiked();
       }
-      // Fetch comments for current video.
       displayComments();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentVideo, loggedIn, userID]);
 
   const handleNext = () => {
@@ -341,7 +344,7 @@ function Home() {
   }
 
   // Toggle the comment section using the COMMENT button.
-  // Modified to simply toggle visibility without re-fetching comments.
+  // Only toggles visibility without re-fetching comments.
   const toggleComments = () => {
     setShowComments((prev) => !prev);
   };
@@ -374,10 +377,11 @@ function Home() {
       setNotification("⚠️ Failed to post comment.");
       setTimeout(() => setNotification(""), 3000);
     }
+    // Refresh both local state and cache for this video.
     displayComments();
   };
 
-  // New function to toggle the like status of a comment
+  // Toggle the like status of a comment.
   async function toggleCommentLike(commentId: number) {
     if (!loggedIn) {
       alert("You must be logged in to like a comment.");
@@ -390,27 +394,36 @@ function Home() {
         { comment_id: commentId },
         { headers: { Authorization: token } }
       );
-      // Update local state for the toggled comment.
-      setComments((prevComments) =>
-        prevComments.map((comment) => {
-          if (comment.id === commentId) {
-            if (response.data.message === "Comment liked") {
-              return { ...comment, liked: true, likeCount: (comment.likeCount || 0) + 1 };
-            } else {
-              return { ...comment, liked: false, likeCount: Math.max((comment.likeCount || 1) - 1, 0) };
-            }
+      const updatedComments = comments.map((comment) => {
+        if (comment.id === commentId) {
+          if (response.data.message === "Comment liked") {
+            return { ...comment, liked: true, likeCount: (comment.likeCount || 0) + 1 };
+          } else {
+            return { ...comment, liked: false, likeCount: Math.max((comment.likeCount || 1) - 1, 0) };
           }
-          return comment;
-        })
-      );
+        }
+        return comment;
+      });
+      setComments(updatedComments);
+      // Update the cache for the current video.
+      setCommentsByVideo((prev) => ({
+        ...prev,
+        [currentVideo]: updatedComments,
+      }));
     } catch (error) {
       console.error("Error toggling comment like:", error);
       alert("Failed to toggle comment like. Please try again.");
     }
   }
 
-  // Fetch comments along with their replies.
+  // Fetch comments (with usernames, like counts/status, and replies) for the current video.
   async function displayComments() {
+    if (!currentVideo) return;
+    // If we've already cached comments for this video, use them.
+    if (commentsByVideo[currentVideo]) {
+      setComments(commentsByVideo[currentVideo]);
+      return;
+    }
     try {
       const fileName = currentVideo.split("/").pop();
       if (!fileName) return;
@@ -459,6 +472,10 @@ function Home() {
         })
       );
       setComments(commentsWithUsernames);
+      setCommentsByVideo((prev) => ({
+        ...prev,
+        [currentVideo]: commentsWithUsernames,
+      }));
     } catch (error) {
       console.error("Error fetching comments:", error);
     }
