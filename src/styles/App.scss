@@ -165,7 +165,16 @@ body {
   border-bottom: 2px solid black; /* Optional: Separator */
 }
 
+.comment-box {
+  background-color: white;
+  padding-bottom: 15px; /* Padding inside each comment */
+}
+
 .reply-icon{
   margin-left: 20px;
   cursor: pointer;
+}
+
+.comment-input-div {
+  margin-top: 20px;
 }

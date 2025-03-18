@@ -572,37 +572,16 @@ function Home() {
               maxHeight: "40vh",
               overflowY: "auto",
             }}
-          >
-            <textarea
-              id="comment-input"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Write a comment..."
-            ></textarea>
-            <button onClick={postComment}>
-              <i className="fa-solid fa-paper-plane"></i>
-            </button>
+          > 
             <div className="comments-list">
               {comments.map((c) => (
-                <div key={c.id} style={{ marginBottom: "10px" }}>
+                <div key={c.id} className="comment-box">
                   <p>
                     <strong>{c.username}</strong> ({c.created_at}): {c.comment}
                   </p>
-                  {/* Comment like button */}
-                  <button
-                    onClick={() => toggleCommentLike(c.id)}
-                    style={{
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      color: c.liked ? "red" : "black",
-                      fontSize: "1.1em",
-                    }}
-                  >
-                    <i className="fa-solid fa-heart"></i> {c.likeCount || 0}
-                  </button>
-                  {/* Toggle replies */}
+                  {/* Toggle button for showing/hiding replies using icons */}
                   {c.replies && c.replies.length > 0 && (
+                    <div style={{ width: "24px", textAlign: "center" }}>
                     <button
                       onClick={() => toggleRepliesVisible(c.id)}
                       style={{ border: "none", background: "transparent", cursor: "pointer" }}
@@ -613,28 +592,12 @@ function Home() {
                         <i className="fa-solid fa-chevron-down" style={{ fontSize: "1.2em", color: "#333" }}></i>
                       )}
                     </button>
-                  )}
-                  {repliesVisible[c.id] && c.replies && c.replies.length > 0 && (
-                    <div style={{ marginLeft: "20px" }}>
-                      {c.replies.map((r) => (
-                        <p key={r.id}>
-                          <strong>{r.username}</strong> ({r.created_at}): {r.reply}
-                        </p>
-                      ))}
                     </div>
                   )}
-                  <button onClick={() => toggleReplyInput(c.id)}>
-                    <i className="fa-regular fa-comments"></i>
-                  </button>
+                  {/* Toggle the reply input for each comment */}
+                  <button onClick={() => toggleReplyInput(c.id)}><i className="fa-regular fa-comments"></i></button>
                   {replyVisible[c.id] && (
-                    <div
-                      style={{
-                        marginLeft: "20px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    >
+                    <div style={{ marginLeft: "20px", display: "flex", alignItems: "center", gap: "8px" }}>
                       <input
                         type="text"
                         value={replyInputs[c.id] || ""}
@@ -646,16 +609,28 @@ function Home() {
                         }
                         placeholder="Write a reply..."
                       />
-                      <button onClick={() => postReply(c.id)}>
-                        <i className="fa-regular fa-paper-plane"></i>
-                      </button>
+                      <button onClick={() => postReply(c.id)}><i className="fa-regular fa-paper-plane"></i></button>
                     </div>
                   )}
                 </div>
               ))}
             </div>
+            {loggedIn && (
+            <div className="comment-input-div">
+              <textarea
+                id="comment-input"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Write a comment..."
+              ></textarea>
+              <button onClick={postComment}>
+                <i className="fa-solid fa-paper-plane"></i>
+              </button>
+            </div>
+          )}
           </div>
         )}
+
         {notification && (
           <div
             className="notification"
