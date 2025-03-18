@@ -18,7 +18,7 @@ if (process.env.DATABASE_HOST) {
 
 app.use(express.json()); // Parse JSON bodies
 
-// Enable CORS for your React app (localhost:5173) – for dev, using wildcard.
+// Enable CORS for your React app – for dev, using wildcard.
 app.use(
   cors({
     origin: "*",
@@ -62,28 +62,24 @@ const authenticateToken = (req, res, next) => {
 
 // Upload video with authentication
 app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
-  const filePath = path.join("./media", req.file.filename);
-  const outputPath = filePath.replace(".mp4", "trans.mp4");
-  const outputFile = req.file.filename.replace(".mp4", "trans.mp4");
-
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded" });
   }
+  const filePath = path.join("./media", req.file.filename);
+  const outputPath = filePath.replace(".mp4", "trans.mp4");
+  const outputFile = req.file.filename.replace(".mp4", "trans.mp4");
 
   const { title, description } = req.body;
   const creatorId = req.user.userId;
   if (!creatorId) {
     fs.unlink(filePath, (err) => {
       if (err) console.error("Error deleting file: ", err);
-      else console.log("File deleted successfully");
     });
     return res.status(400).json({ message: "Invalid creator ID" });
   }
-
   if (!title) {
     fs.unlink(filePath, (err) => {
       if (err) console.error("Error deleting file: ", err);
-      else console.log("File deleted successfully");
     });
     return res
       .status(400)
@@ -108,7 +104,7 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
     console.error(`stderr: ${data}`);
   });
   ffmpeg.on("close", (code) => {
-    console.log(code);
+    console.log("ffmpeg exited with code:", code);
     if (code !== 0) {
       fs.unlink(filePath, (err) => {
         if (err) console.error("Error deleting file: ", err);
@@ -134,7 +130,6 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
       if (err) {
         fs.unlink(filePath, (err) => {
           if (err) console.error("Error deleting file: ", err);
-          else console.log("File deleted successfully");
         });
         console.error("Error inserting video into database: ", err);
         db.destroy();
@@ -142,7 +137,9 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
       }
       console.log("Insert result:", result);
       db.destroy();
-      return res.status(200).json({ message: "File uploaded successfully!" });
+      return res
+        .status(200)
+        .json({ message: "File uploaded successfully!" });
     }
   );
 });
@@ -200,13 +197,13 @@ app.get("/video-list", (req, res) => {
   const selectQuery = "SELECT fileName FROM videos";
   db.query(selectQuery, (err, results) => {
     if (err) {
-      console.error("Error fetching video from database: ", err);
+      console.error("Error fetching videos from database: ", err);
       db.destroy();
       return res.status(500).json({ message: "Database error", error: err });
     }
     if (results.length === 0) {
       db.destroy();
-      return res.status(404).json({ message: "Video not found" });
+      return res.status(404).json({ message: "No videos found" });
     }
     db.destroy();
     return res.status(200).json(results);
@@ -222,18 +219,14 @@ app.post("/post-comment", authenticateToken, async (req, res) => {
   const db = dbRequest(dbHost);
   const { video_id, comment } = req.body;
   const userId = req.user.userId;
-  console.log("Received Comment Request:");
-  console.log("User ID:", userId);
-  console.log("Video ID:", video_id);
-  console.log("Comment:", comment);
   if (!video_id || !comment) {
     db.destroy();
     return res.status(400).json({ message: "Video ID and comment are required" });
   }
   try {
-    const insertQuery = "INSERT INTO comments (user_id, video_id, content) VALUES (?, ?, ?)";
+    const insertQuery =
+      "INSERT INTO comments (user_id, video_id, content) VALUES (?, ?, ?)";
     await db.promise().query(insertQuery, [userId, video_id, comment]);
-    console.log("Comment successfully stored in database!");
     db.destroy();
     return res.status(200).json({ message: "Comment posted successfully!" });
   } catch (error) {
@@ -243,15 +236,28 @@ app.post("/post-comment", authenticateToken, async (req, res) => {
   }
 });
 
-// Get comments for a video
+// Updated: Get comments for a video – includes like count and liked flag
 app.get("/get-comments", async (req, res) => {
   const db = dbRequest(dbHost);
+  let userId = null;
+  // Check if a token is provided and decode it
+  if (req.headers.authorization) {
+    try {
+      const token = req.headers.authorization;
+      const decoded = jwt.verify(token, "secretkey");
+      userId = decoded.userId;
+    } catch (err) {
+      console.error("Invalid token", err);
+    }
+  }
+
   const { fileName } = req.query;
   if (!fileName) {
     db.destroy();
     return res.status(400).json({ message: "File name is required" });
   }
   try {
+    // Find the video id for the provided file name.
     const videoQuery = "SELECT id FROM videos WHERE fileName = ?";
     const [videoResult] = await db.promise().query(videoQuery, [fileName]);
     if (videoResult.length === 0) {
@@ -259,8 +265,35 @@ app.get("/get-comments", async (req, res) => {
       return res.status(404).json({ message: "Video not found" });
     }
     const videoId = videoResult[0].id;
-    const selectQuery = "SELECT * FROM comments WHERE video_id = ?";
-    const [results] = await db.promise().query(selectQuery, [videoId]);
+
+    let query = "";
+    let params = [];
+    if (userId) {
+      // When a user is logged in, check if they liked each comment.
+      query = `
+        SELECT c.*, 
+          COUNT(cl.id) AS likeCount,
+          MAX(CASE WHEN cl.user_id = ? THEN 1 ELSE 0 END) AS liked
+        FROM comments c
+        LEFT JOIN comment_likes cl ON c.id = cl.comment_id
+        WHERE c.video_id = ?
+        GROUP BY c.id
+      `;
+      params = [userId, videoId];
+    } else {
+      // When no user is logged in, return like count and set liked flag to 0.
+      query = `
+        SELECT c.*, 
+          COUNT(cl.id) AS likeCount, 
+          0 AS liked
+        FROM comments c
+        LEFT JOIN comment_likes cl ON c.id = cl.comment_id
+        WHERE c.video_id = ?
+        GROUP BY c.id
+      `;
+      params = [videoId];
+    }
+    const [results] = await db.promise().query(query, params);
     return res.status(200).json(results);
   } catch (error) {
     console.error("Error fetching comments: ", error);
@@ -277,10 +310,13 @@ app.post("/post-reply", authenticateToken, async (req, res) => {
   const userId = req.user.userId;
   if (!comment_id || !reply) {
     db.destroy();
-    return res.status(400).json({ message: "Comment ID and reply content are required" });
+    return res
+      .status(400)
+      .json({ message: "Comment ID and reply content are required" });
   }
   try {
-    const insertQuery = "INSERT INTO reply (creator_id, content, comment_id) VALUES (?, ?, ?)";
+    const insertQuery =
+      "INSERT INTO reply (creator_id, content, comment_id) VALUES (?, ?, ?)";
     await db.promise().query(insertQuery, [userId, reply, comment_id]);
     db.destroy();
     return res.status(200).json({ message: "Reply posted successfully!" });
@@ -311,11 +347,7 @@ app.get("/get-replies", async (req, res) => {
   }
 });
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Upload Server is running at http://localhost:${port}`);
-})
-// Add this endpoint below your other comment endpoints (e.g., after "/post-reply" or "/get-replies")
+// Toggle comment like (requires authentication)
 app.post("/toggle-comment-like", authenticateToken, async (req, res) => {
   const db = dbRequest(dbHost);
   const { comment_id } = req.body;
@@ -326,13 +358,13 @@ app.post("/toggle-comment-like", authenticateToken, async (req, res) => {
     return res.status(400).json({ message: "Comment ID is required" });
   }
   try {
-    // Check if this comment is already liked by the user
+    // Check if the comment is already liked by the user.
     const [rows] = await db.promise().query(
       "SELECT * FROM comment_likes WHERE comment_id = ? AND user_id = ?",
       [comment_id, userId]
     );
     if (rows.length > 0) {
-      // Already liked – remove the like (unlike)
+      // If liked, remove the like.
       await db.promise().query(
         "DELETE FROM comment_likes WHERE comment_id = ? AND user_id = ?",
         [comment_id, userId]
@@ -340,7 +372,7 @@ app.post("/toggle-comment-like", authenticateToken, async (req, res) => {
       db.destroy();
       return res.status(200).json({ message: "Comment unliked" });
     } else {
-      // Not yet liked – add a like entry
+      // If not liked, add a like entry.
       await db.promise().query(
         "INSERT INTO comment_likes (comment_id, user_id) VALUES (?, ?)",
         [comment_id, userId]
@@ -355,3 +387,7 @@ app.post("/toggle-comment-like", authenticateToken, async (req, res) => {
   }
 });
 
+// Start the server
+app.listen(port, () => {
+  console.log(`Upload Server is running at http://localhost:${port}`);
+});
