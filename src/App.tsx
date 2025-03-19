@@ -1,5 +1,5 @@
-import "./styles/App.scss"; // Import global and App-specific styles
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import "./styles/App.scss";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Login from "./login.tsx";
 import Signup from "./signup.tsx";
@@ -94,12 +94,14 @@ function Home() {
   const [notification, setNotification] = useState("");
   const [comment, setComment] = useState("");
 
-  // Comment type now includes an id, username, comment text, created_at, and optional replies.
+  // Updated comment interface to include likeCount and liked status
   interface CommentType {
     id: number;
     username: string;
     comment: string;
     created_at: string;
+    likeCount?: number;
+    liked?: boolean;
     replies?: ReplyType[];
   }
   interface ReplyType {
@@ -109,11 +111,10 @@ function Home() {
     created_at: string;
   }
   const [comments, setComments] = useState<CommentType[]>([]);
+  // Cache comment state per video & user (key: currentVideo + '-' + userID or 'anon')
+  const [commentsByVideo, setCommentsByVideo] = useState<{ [key: string]: CommentType[] }>({});
 
   // For reply functionality:
-  // - replyInputs holds reply text per comment.
-  // - replyVisible toggles showing the reply input field.
-  // - repliesVisible toggles showing/hiding the entire replies list.
   const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
   const [replyVisible, setReplyVisible] = useState<{ [key: number]: boolean }>(
     {}
@@ -168,7 +169,7 @@ function Home() {
   //   }));
   // };
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
 
   // current video use states
@@ -183,6 +184,7 @@ function Home() {
     setCurrentVideo(filteredArray[videoIndex] || "");
   }, [videoIndex]);
 
+  // When currentVideo or account changes, re-fetch comment info.
   useEffect(() => {
     if (currentVideo) {
       console.log("Video changed to:", currentVideo.split("/").pop());
@@ -190,7 +192,6 @@ function Home() {
       if (loggedIn && userID) {
         checkIfLiked();
       }
-      // Fetch comments for current video.
       displayComments();
     }
   }, [currentVideo]);
@@ -239,6 +240,7 @@ function Home() {
           }
         }
       }
+    
 
       setReplyLiked(initialLikedState);
       setReplyLikeCount(initialLikeCountState);
@@ -254,6 +256,7 @@ function Home() {
     );
     displayComments();
   };
+  
 
   // const navigate = useNavigate(); // Hook to navigate to other pages
   // const handleBackToDashboard = () => {
@@ -458,54 +461,54 @@ function Home() {
     }
   }
 
-  async function handleReplyLike(reply_id:number) {
-    if (!userID || !loggedIn) {
-      alert("You must be logged in to like replies.");
-      return;
-    }
-
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      alert("Authentication error. Please log in again.");
-      setLoggedIn(false);
-      return;
-    }
-
-    const fileName = currentVideo.split("/").pop();
-    if (!fileName) {
-      console.error("Error: fileName is missing.");
-      return;
-    }
-
-    try {
-      const response = await axios.post(
-        `${loginServer}/like-reply`,
-        { fileName, reply_id },
-        { params: { auth: token } }
-      );
-
-      // Update both states atomically
-      setReplyLiked((prev) => {
-        const newState = { ...prev, [reply_id]: !prev[reply_id] };
-
-        // Update like count based on the new liked state
-        setReplyLikeCount((prevCounts) => {
-          const currentCount = prevCounts[reply_id] || 0;
-          return {
-            ...prevCounts,
-            [reply_id]: newState[reply_id]
-              ? currentCount + 1
-              : Math.max(0, currentCount - 1),
-          };
-        });
-
-        return newState;
-      });
-    } catch (error) {
-      console.error("Error liking/unliking reply:", error);
-      alert("Failed to process like. Please try again.");
-    }
+async function handleReplyLike(reply_id: number) {
+  if (!userID || !loggedIn) {
+    alert("You must be logged in to like replies.");
+    return;
   }
+
+  const token = localStorage.getItem("authToken");
+  if (!token) {
+    alert("Authentication error. Please log in again.");
+    setLoggedIn(false);
+    return;
+  }
+
+  const fileName = currentVideo.split("/").pop();
+  if (!fileName) {
+    console.error("Error: fileName is missing.");
+    return;
+  }
+
+  try {
+    const response = await axios.post(
+      `${loginServer}/like-reply`,
+      { fileName, reply_id },
+      { params: { auth: token } }
+    );
+
+    // Update both states atomically
+    setReplyLiked((prev) => {
+      const newState = { ...prev, [reply_id]: !prev[reply_id] };
+
+      // Update like count based on the new liked state
+      setReplyLikeCount((prevCounts) => {
+        const currentCount = prevCounts[reply_id] || 0;
+        return {
+          ...prevCounts,
+          [reply_id]: newState[reply_id]
+            ? currentCount + 1
+            : Math.max(0, currentCount - 1),
+        };
+      });
+
+      return newState;
+    });
+  } catch (error) {
+    console.error("Error liking/unliking reply:", error);
+    alert("Failed to process like. Please try again.");
+  }
+}
 
   // Toggle the comment section using the COMMENT button.
   // const toggleComments = () => {
@@ -513,7 +516,7 @@ function Home() {
   //   if (!showComments) displayComments();
   // };
 
-  // Post a comment and refresh the comments list.
+  // Post a comment and refresh comments (updating both state and cache)
   const postComment = async () => {
     if (comment.trim() === "") return;
     try {
@@ -544,17 +547,58 @@ function Home() {
     displayComments();
   };
 
-  const handleVideoStart = () => {
-    recordView();
-  };
+  // Toggle the like status of a comment and update the cache for the current video/user.
+  async function toggleCommentLike(commentId: number) {
+    if (!loggedIn) {
+      alert("You must be logged in to like a comment.");
+      return;
+    }
+    const token = localStorage.getItem("authToken");
+    try {
+      const response = await axios.post(
+        `${uploadServer}/toggle-comment-like`,
+        { comment_id: commentId },
+        { headers: { Authorization: token } }
+      );
+      const updatedComments = comments.map((comment) => {
+        if (comment.id === commentId) {
+          if (response.data.message === "Comment liked") {
+            return { ...comment, liked: true, likeCount: (comment.likeCount || 0) + 1 };
+          } else {
+            return { ...comment, liked: false, likeCount: Math.max((comment.likeCount || 1) - 1, 0) };
+          }
+        }
+        return comment;
+      });
+      setComments(updatedComments);
+      const cacheKey = currentVideo + "-" + (userID || "anon");
+      setCommentsByVideo((prev) => ({
+        ...prev,
+        [cacheKey]: updatedComments,
+      }));
+    } catch (error) {
+      console.error("Error toggling comment like:", error);
+      alert("Failed to toggle comment like. Please try again.");
+    }
+  }
 
-  // Fetch comments along with their replies.
+  // Fetch comments (with usernames, like counts/status, and replies) for the current video/user.
   async function displayComments() {
+    if (!currentVideo) return;
+    const cacheKey = currentVideo + "-" + (userID || "anon");
+    // Use cached comments if available.
+    if (commentsByVideo[cacheKey]) {
+      setComments(commentsByVideo[cacheKey]);
+      return;
+    }
     try {
       const fileName = currentVideo.split("/").pop();
       if (!fileName) return;
+      const token = localStorage.getItem("authToken");
+      const headers = token ? { Authorization: token } : {};
       const response = await axios.get(`${uploadServer}/get-comments`, {
         params: { fileName },
+        headers,
       });
       const fetchedComments = response.data;
       const commentsWithUsernames = await Promise.all(
@@ -594,11 +638,17 @@ function Home() {
             username: userResponse.data.username,
             comment: comment.content,
             created_at: comment.created_at,
+            likeCount: comment.likeCount || 0,
+            liked: comment.liked || false,
             replies: replies,
           };
         })
       );
       setComments(commentsWithUsernames);
+      setCommentsByVideo((prev) => ({
+        ...prev,
+        [cacheKey]: commentsWithUsernames,
+      }));
     } catch (error) {
       console.error("Error fetching comments:", error);
     }
@@ -620,7 +670,7 @@ function Home() {
     } catch (error) {
       console.error("Error posting reply:", error);
     }
-    toggleReplyInput(commentId);
+    // toggleReplyInput(commentId);
   }
 
   // Toggle visibility of replies for a specific comment.
@@ -648,87 +698,88 @@ function Home() {
   console.log("Reply Liked State Before Rendering:", replyLiked);
 
   return (
-    
     <div className="app">
       <div className="app-container">
-      <div className="video-player">
-        <ReactPlayer
-          id="video"
-          url={currentVideo || ""}
-          playing={true}
-          muted={true}
-          controls={true}
-          loop={true}
-          playsinline={true}
-          width="90vw"
-          height="60vh"
-          onStart={handleVideoStart}
-        />
-      <div className="controls">
-        <div className="video-stats">
-        <LikeButton
-          fileName={currentVideo ? currentVideo.split("/").pop() || "" : ""}
-          loggedIn={loggedIn}
-          userId={userID}
-          initialLikeCount={likeCount}
-          initialLiked={liked}
-          loginServer={loginServer}
-        />
-        <span className="views">
-          <i className="fa-solid fa-eye"></i> {viewCount}<span className="desktop__text"> Views</span>
-        </span>
-        
+        <div className="video-player">
+          <ReactPlayer
+            id="video"
+            url={currentVideo || ""}
+            playing={true}
+            muted={true}
+            controls={true}
+            loop={true}
+            playsinline={true}
+            width="90vw"
+            height="60vh"
+            onStart={recordView}
+          />
+          <div className="controls">
+            <div className="video-stats">
+              <LikeButton
+                fileName={currentVideo ? currentVideo.split("/").pop() || "" : ""}
+                loggedIn={loggedIn}
+                userId={userID}
+                initialLikeCount={likeCount}
+                initialLiked={liked}
+                loginServer={loginServer}
+              />
+              <span className="views">
+                <i className="fa-solid fa-eye"></i> {viewCount}
+                <span className="desktop__text"> Views</span>
+              </span>
+            </div>
+            <div className="download-next">
+              {filteredArray.length > 0 && (
+                <a className="button" href={currentVideo} download>
+                  <i className="fa-solid fa-download"></i>
+                  <span className="desktop__text"> DOWNLOAD</span>
+                </a>
+              )}
+              {filteredArray.length === 0 && (
+                <a className="button greyed">
+                  <i className="fa-solid fa-download"></i>
+                  <span className="desktop__text"> DOWNLOAD</span>
+                </a>
+              )}
+              <a
+                className={filteredArray.length < 2 ? "button greyed" : "button"}
+                onClick={() => {
+                  const videoElement = document.getElementById("video");
+                  if (videoElement && filteredArray.length >= 2) {
+                    videoElement.classList.remove("fade-in");
+                    videoElement.classList.add("fade-out");
+                    setTimeout(() => {
+                      handleNext();
+                      videoElement.classList.remove("fade-out");
+                      videoElement.classList.add("fade-in");
+                    }, 200); // Match the duration of the fade-out animation
+                  }
+                }}
+              >
+                <span className="desktop__text">NEXT </span>
+                <i className="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
         </div>
-        <div className="download-next">
-          
-        {filteredArray.length > 0 && (
-          <a className="button" href={currentVideo} download>
-        <i className="fa-solid fa-download"></i><span className="desktop__text"> DOWNLOAD</span>
-          </a>
-        )}
-        {filteredArray.length == 0 && (
-          <a className="button greyed">
-        <i className="fa-solid fa-download"></i><span className="desktop__text"> DOWNLOAD</span>
-          </a>
-        )}
-        <a
-          className={filteredArray.length < 2 ? "button greyed" : "button"}
-          onClick={() => {
-        const videoElement = document.getElementById("video");
-        if (videoElement && filteredArray.length >= 2) {
-          videoElement.classList.remove("fade-in");
-          videoElement.classList.add("fade-out");
-          setTimeout(() => {
-            handleNext();
-            videoElement.classList.remove("fade-out");
-            videoElement.classList.add("fade-in");
-          }, 200); // Match the duration of the fade-out animation
-        };
-          }}
-        >
-        <span className="desktop__text">NEXT </span><i className="fa-solid fa-arrow-right"></i>
-        </a>
-        </div>
-      </div>
-      </div>
-      <div className="video-details">
-        <div className="details-metadata">
-          {filteredArray.length > 0 && (
-            <>
-              <h1>{currentVideoTitle}</h1>
-              <h2>Engager: {currentVideoCreatorName}</h2>
-              <h3>Uploaded: {currentVideoDate}</h3>
-              <p>{currentVideoDesc !== "" ? currentVideoDesc : "No Description Provided"}</p>
-            </>
-          )}
-          {filteredArray.length == 0 && (
-            <>
-              <h2>There are no videos available</h2>
-              <h3>Upload one to kick things off.</h3>
-            </>
-          )}
-        {/* Comment Section toggled by the COMMENT button */}
-        {/* {showComments && ( */}
+        <div className="video-details">
+          <div className="details-metadata">
+            {filteredArray.length > 0 && (
+              <>
+                <h1>{currentVideoTitle}</h1>
+                <h2>Engager: {currentVideoCreatorName}</h2>
+                <h3>Uploaded: {currentVideoDate}</h3>
+                <p>{currentVideoDesc !== "" ? currentVideoDesc : "No Description Provided"}</p>
+              </>
+            )}
+            {filteredArray.length === 0 && (
+              <>
+                <h2>There are no videos available</h2>
+                <h3>Upload one to kick things off.</h3>
+              </>
+            )}
+          </div>
+  
           <div
             className="comment-section"
             style={{
@@ -744,38 +795,46 @@ function Home() {
           >
             <div className="comments-list">
               {comments.map((c) => (
-                <div key={c.id} className="comment-box" style={{color:"black", textAlign: "left"}}>
-                  <p>
-                    <strong>{c.username}</strong> ({c.created_at}): {c.comment}
-                  </p>
-
-                  <div style={{ display: "flex", gap: "5x" }}>
-                    {/* Toggle button for showing/hiding replies using icons */}
+                <div key={c.id} className="comment-box" style={{ color: "black", textAlign: "left" }}>
+                  <div key={c.id} style={{ marginBottom: "10px" }}>
+                    <p>
+                      <strong>{c.username}</strong> ({c.created_at}): {c.comment}
+                    </p>
+                    {/* Comment like button */}
+                    <button
+                      onClick={() => toggleCommentLike(c.id)}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        color: c.liked ? "red" : "black",
+                        fontSize: "1.1em",
+                      }}
+                    >
+                      <i className="fa-solid fa-heart"></i> {c.likeCount || 0}
+                    </button>
+                    {/* Toggle replies */}
                     {c.replies && c.replies.length > 0 && (
-                      <div style={{ width: "24px", textAlign: "left", color:"black" }}>
-                        <button
-                          onClick={() => toggleRepliesVisible(c.id)}
-                          style={{
-                            border: "none",
-                            background: "transparent",
-                            cursor: "pointer",
-                          }}
-                        >
-                          {repliesVisible[c.id] ? (
-                            <i
-                              className="fa-solid fa-chevron-up"
-                              style={{ fontSize: "1.2em", color: "#333" }}
-                            ></i>
-                          ) : (
-                            <i
-                              className="fa-solid fa-chevron-down"
-                              style={{ fontSize: "1.2em", color: "#333" }}
-                            ></i>
-                          )}
-                        </button>
+                      <button
+                        onClick={() => toggleRepliesVisible(c.id)}
+                        style={{ border: "none", background: "transparent", cursor: "pointer" }}
+                      >
+                        {repliesVisible[c.id] ? (
+                          <i className="fa-solid fa-chevron-up" style={{ fontSize: "1.2em", color: "#333" }}></i>
+                        ) : (
+                          <i className="fa-solid fa-chevron-down" style={{ fontSize: "1.2em", color: "#333" }}></i>
+                        )}
+                      </button>
+                    )}
+                    {repliesVisible[c.id] && c.replies && c.replies.length > 0 && (
+                      <div style={{ marginLeft: "20px" }}>
+                        {c.replies.map((r) => (
+                          <p key={r.id}>
+                            <strong>{r.username}</strong> ({r.created_at}): {r.reply}
+                          </p>
+                        ))}
                       </div>
                     )}
-
                     {loggedIn && (
                       <div>
                         <button onClick={() => toggleReplyInput(c.id)}>
@@ -810,17 +869,16 @@ function Home() {
                       </div>
                     )}
                   </div>
-
+  
                   {repliesVisible[c.id] &&
                     c.replies &&
                     c.replies.length > 0 && (
                       <div style={{ marginLeft: "20px" }}>
                         {c.replies.map((r) => (
-                          <div>
+                          <div key={r.id}>
                             <div>
-                              <p key={r.id}>
-                                <strong>{r.username}</strong> ({r.created_at}):{" "}
-                                {r.reply}
+                              <p>
+                                <strong>{r.username}</strong> ({r.created_at}): {r.reply}
                               </p>
                             </div>
                             <div
@@ -854,6 +912,7 @@ function Home() {
                 </div>
               ))}
             </div>
+  
             {loggedIn && (
               <div className="comment-input-div">
                 <textarea
@@ -867,55 +926,51 @@ function Home() {
                 </button>
               </div>
             )}
+  
+            {notification && (
+              <div
+                className="notification"
+                style={{
+                  position: "fixed",
+                  bottom: "80px",
+                  right: "20px",
+                  background: "#28a745",
+                  color: "white",
+                  padding: "10px",
+                  borderRadius: "5px",
+                }}
+              >
+                {notification}
+              </div>
+            )}
           </div>
-        {/* )} */}
-
-        {notification && (
-          <div
-            className="notification"
-            style={{
-              position: "fixed",
-              bottom: "80px",
-              right: "20px",
-              background: "#28a745",
-              color: "white",
-              padding: "10px",
-              borderRadius: "5px",
-            }}
-          >
-            {notification}
-          </div>
-        )}
+        </div>
       </div>
-    </div>
-    </div>
     </div>
   );
 }
+  
 
-function App() {
-  return (
-    <BrowserRouter>
+  function App() {
+    return (
+      <BrowserRouter>
         <TopBar />
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/verify-email/:token" element={<VerifyEmail />} />
-          <Route path="/recover-account/:token" element={<RecoverAccount />} />
-        {/* User Page Route */}
-
-          {/* Protected Route for Dashboard and Video Player */}
+  
+          {/* Protected Routes */}
           <Route element={<PrivateRoute />}>
-        <Route path="/user" element={<User />} />
-        <Route path="/upload" element={<Upload />} />
-        {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+            <Route path="/user" element={<User />} />
+            <Route path="/upload" element={<Upload />} />
           </Route>
         </Routes>
-    </BrowserRouter>
-  );
-}
-
-export default App;
+      </BrowserRouter>
+    );
+  }
+  
+  export default App;
