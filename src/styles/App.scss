@@ -297,6 +297,7 @@ body {
   }
 }
 
+<<<<<<< HEAD
 
 #video{
   max-height: 65vh;
@@ -355,3 +356,35 @@ body {
     text-align: center;
   }
 }
+=======
+.comment-section{
+  position:fixed;
+  max-width: 250px;
+  max-height: 400px;
+  bottom:13%;
+  right:28%;
+  background-color: white;
+  padding:10px;
+  overflow-y: scroll;
+}
+
+.comment {
+  background-color: white;
+  padding-bottom: 20px; /* Padding inside each comment */
+  border-bottom: 2px solid black; /* Optional: Separator */
+}
+
+.comment-box {
+  background-color: white;
+  padding-bottom: 15px; /* Padding inside each comment */
+}
+
+.reply-icon{
+  margin-left: 20px;
+  cursor: pointer;
+}
+
+.comment-input-div {
+  margin-top: 20px;
+}
+>>>>>>> like-reply

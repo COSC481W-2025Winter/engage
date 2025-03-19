@@ -3,7 +3,7 @@ use engage;
 
 CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
-	username VARCHAR(30)  UNIQUE,
+username VARCHAR(30)  UNIQUE,
     email VARCHAR(50) UNIQUE,
     password VARCHAR(250),
     role VARCHAR(10),
@@ -20,7 +20,7 @@ CREATE TABLE videos(
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fileName text NOT NULL,
     PRIMARY KEY(id),
-    FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (creator_id) REFERENCES users(id)
 );
 
 CREATE TABLE comments (
@@ -50,6 +50,7 @@ CREATE TABLE reply_likes(
     FOREIGN KEY (reply_id) REFERENCES reply(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 CREATE TABLE likes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -66,4 +67,27 @@ CREATE TABLE video_views (
     PRIMARY KEY(id),
     FOREIGN KEY (video_id) REFERENCES videos(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    video_id INT NOT NULL,
+    comment TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE comment_likes(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    comment_id INT NOT NULL,
+    FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
