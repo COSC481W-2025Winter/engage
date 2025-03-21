@@ -304,12 +304,54 @@ body {
   max-width: 60vw;
 }
 
+.comment-section{
+  // position:fixed;
+  max-width: 250px;
+  width: 250px;
+  height: 20vh;
+  max-height: 20vh;
+  align-self: flex-end;
+  // max-height: 400px;
+  // bottom:13%;
+  // right:28%;
+  background-color: #000;
+  border: 3px solid #ddd;
+  border-radius: 10px;
+  padding:10px;
+  overflow-y: scroll;
+}
+
+.comment {
+  background-color: #ddd;
+  padding-bottom: 20px; /* Padding inside each comment */
+  border-bottom: 2px solid black; /* Optional: Separator */
+}
+
+.comment-box {
+  background-color: white;
+  padding-bottom: 15px; /* Padding inside each comment */
+}
+
+.reply-icon{
+  margin-left: 20px;
+  cursor: pointer;
+}
+
+.comment-input-div {
+  margin-top: 20px;
+}
+
 @media screen and (max-width: 870px) {
   .button.not-liked{
     &:hover{
       color: #f10372;
       padding: 10px;
     }
+  }
+  .comment-section{
+    align-self:center;
+    height: 40vh;
+    max-height: 40vh;
   }
   .app-container {
     width: 90vw;
@@ -355,3 +397,4 @@ body {
     text-align: center;
   }
 }
+

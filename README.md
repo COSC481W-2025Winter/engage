@@ -1,6 +1,6 @@
 # Engage
 ## Team Info
-- **Team name**: Holy Hand Grenade LLC
+- **Team name**: Ngage LLC
 - **Team members**: Joshua Randall, Long Nguyen Thanh Le, Johnny Zheng, Riyat Leiyate, Maksim Spitsyn
 ## Project Description
 Engage (name tentative) is a mobile/web application that aims to host short form video content similar to TikTok, but have more of a focus on privacy and customization. The app will allow users to create and share short videos with each other and the world, and will prioritize privacy by considering algorithms that respect the user's agency and privacy. This aims to give the user more control of what they see, by subscribing to categories/sub-categories. Features that may be included are custom theming, new customization options for profiles, and more as development progresses. The ~~app~~ website will be developed using ~~Flutter~~, React, SCSS, npm, git, docker, and Postgres.

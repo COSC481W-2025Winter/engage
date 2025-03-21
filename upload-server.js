@@ -77,6 +77,10 @@ io.on("connection", (socket) => {
   });
 });
 
+// ------------------------------
+// VIDEO UPLOAD & RELATED ENDPOINTS
+// ------------------------------
+
 // Upload video with authentication
 app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
   if (!req.file) {
@@ -262,7 +266,6 @@ function deleteFile(filePath) {
 app.get("/user", (req, res) => {
   const db = dbRequest(dbHost);
   const { userID: userid } = req.query;
-
   if (!userid) {
     return res.status(400).json({ message: "UserID is required" });
   }
@@ -273,7 +276,6 @@ app.get("/user", (req, res) => {
       db.destroy();
       return res.status(500).json({ message: "Database error", error: err });
     }
-
     if (results.length === 0) {
       db.destroy();
       return res.status(404).json({ message: "User not found" });
@@ -283,16 +285,14 @@ app.get("/user", (req, res) => {
   });
 });
 
-// Get Video info
+// Get video info
 app.get("/video", (req, res) => {
   const db = dbRequest(dbHost);
   const { fileName: filename } = req.query;
-
   if (!filename) {
     db.destroy();
     return res.status(400).json({ message: "Filename is required" });
   }
-
   const selectQuery = "SELECT * FROM videos WHERE fileName = ?";
   db.query(selectQuery, [filename], (err, results) => {
     if (err) {
@@ -300,7 +300,6 @@ app.get("/video", (req, res) => {
       db.destroy();
       return res.status(500).json({ message: "Database error", error: err });
     }
-
     if (results.length === 0) {
       db.destroy();
       return res.status(404).json({ message: "Video not found" });
@@ -310,7 +309,7 @@ app.get("/video", (req, res) => {
   });
 });
 
-// Get Video info
+// Get video list
 app.get("/video-list", (req, res) => {
   const db = dbRequest(dbHost);
   const selectQuery = "SELECT fileName FROM videos";
@@ -320,7 +319,6 @@ app.get("/video-list", (req, res) => {
       db.destroy();
       return res.status(500).json({ message: "Database error", error: err });
     }
-
     if (results.length === 0) {
       db.destroy();
       return res.status(404).json({ message: "Video not found" });
@@ -328,6 +326,104 @@ app.get("/video-list", (req, res) => {
     db.destroy();
     return res.status(200).json(results);
   });
+});
+
+// ------------------------------
+// COMMENT & REPLY ENDPOINTS
+// ------------------------------
+
+// Post a comment (requires authentication)
+app.post("/post-comment", authenticateToken, async (req, res) => {
+  const db = dbRequest(dbHost);
+  const { video_id, comment } = req.body;
+  const userId = req.user.userId;
+  console.log("Received Comment Request:");
+  console.log("User ID:", userId);
+  console.log("Video ID:", video_id);
+  console.log("Comment:", comment);
+  if (!video_id || !comment) {
+    db.destroy();
+    return res.status(400).json({ message: "Video ID and comment are required" });
+  }
+  try {
+    const insertQuery = "INSERT INTO comments (user_id, video_id, content) VALUES (?, ?, ?)";
+    await db.promise().query(insertQuery, [userId, video_id, comment]);
+    console.log("Comment successfully stored in database!");
+    db.destroy();
+    return res.status(200).json({ message: "Comment posted successfully!" });
+  } catch (error) {
+    console.error("Error inserting comment:", error);
+    db.destroy();
+    return res.status(500).json({ message: "Database error", error });
+  }
+});
+
+// Get comments for a video
+app.get("/get-comments", async (req, res) => {
+  const db = dbRequest(dbHost);
+  const { fileName } = req.query;
+  if (!fileName) {
+    db.destroy();
+    return res.status(400).json({ message: "File name is required" });
+  }
+  try {
+    const videoQuery = "SELECT id FROM videos WHERE fileName = ?";
+    const [videoResult] = await db.promise().query(videoQuery, [fileName]);
+    if (videoResult.length === 0) {
+      db.destroy();
+      return res.status(404).json({ message: "Video not found" });
+    }
+    const videoId = videoResult[0].id;
+    const selectQuery = "SELECT * FROM comments WHERE video_id = ?";
+    const [results] = await db.promise().query(selectQuery, [videoId]);
+    return res.status(200).json(results);
+  } catch (error) {
+    console.error("Error fetching comments: ", error);
+    return res.status(500).json({ message: "Database error", error });
+  } finally {
+    db.destroy();
+  }
+});
+
+// Post a reply to a comment (requires authentication)
+app.post("/post-reply", authenticateToken, async (req, res) => {
+  const db = dbRequest(dbHost);
+  const { comment_id, reply } = req.body;
+  const userId = req.user.userId;
+  if (!comment_id || !reply) {
+    db.destroy();
+    return res.status(400).json({ message: "Comment ID and reply content are required" });
+  }
+  try {
+    const insertQuery = "INSERT INTO reply (creator_id, content, comment_id) VALUES (?, ?, ?)";
+    await db.promise().query(insertQuery, [userId, reply, comment_id]);
+    db.destroy();
+    return res.status(200).json({ message: "Reply posted successfully!" });
+  } catch (error) {
+    console.error("Error inserting reply:", error);
+    db.destroy();
+    return res.status(500).json({ message: "Database error", error });
+  }
+});
+
+// Get replies for a given comment
+app.get("/get-replies", async (req, res) => {
+  const db = dbRequest(dbHost);
+  const { comment_id } = req.query;
+  if (!comment_id) {
+    db.destroy();
+    return res.status(400).json({ message: "Comment ID is required" });
+  }
+  try {
+    const selectQuery = "SELECT * FROM reply WHERE comment_id = ?";
+    const [results] = await db.promise().query(selectQuery, [comment_id]);
+    db.destroy();
+    return res.status(200).json(results);
+  } catch (error) {
+    console.error("Error fetching replies:", error);
+    db.destroy();
+    return res.status(500).json({ message: "Database error", error });
+  }
 });
 
 // Use server.listen instead of app.listen to enable socket.io

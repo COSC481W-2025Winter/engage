@@ -115,8 +115,8 @@ export const signup = async (req, res) => {
           const mailOptions = {
             from: emailUser, // your email
             to: email,
-            subject: "Verify Your Email",
-            text: `Click this link to verify your email: ${verificationLink}`,
+            subject: "Welcome to Engage: Verification",
+            text: `Welcome to Engage!\nPlease verify here: ${verificationLink}`,
           };
 
           transporter.sendMail(mailOptions, (error, info) => {
@@ -211,8 +211,8 @@ app.post("/send-recovery-link", (req, res) => {
     const mailOptions = {
       from: emailUser,
       to: email,
-      subject: "Password Recovery",
-      text: `The link will expire in 1 hour. Click this link to reset your password: ${recoveryLink}`,
+      subject: "Engage: Password Recovery",
+      text: `Reset your password here: ${recoveryLink}\nYour token will expire in 1 hour.`,
     };
     const attachTokenQuery = "UPDATE users SET recoveryToken = ? WHERE email = ?";
     db.query(attachTokenQuery, [recoveryToken, email], (err) => {
@@ -630,6 +630,89 @@ app.get("/video-views/:fileName", (req, res) => {
     });
 });
 
+app.get("/fetch-reply-liked", authenticateTokenGet, (req, res) => {
+  const user_id = req.user.userId;
+  const { reply_id } = req.query;
+
+  const db = dbRequest(dbHost);
+
+  const query = "SELECT * FROM reply_likes WHERE user_id = ? AND reply_id = ?";
+  db.query(query, [user_id, reply_id], (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      db.destroy();
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    db.destroy();
+    return res.status(200).json({ liked: results.length > 0 });
+  });
+});
+
+// Updated like-video endpoint
+app.post("/like-reply", authenticateTokenGet, (req, res) => {
+  const { fileName, reply_id } = req.body;
+  const userId = req.user.userId;
+  const db = dbRequest(dbHost);
+
+  console.log("User ID:", userId);
+
+  // Check if user already liked the reply
+  const checkLikeQuery =
+    "SELECT * FROM reply_likes WHERE user_id = ? AND reply_id = ?";
+  db.query(checkLikeQuery, [userId, reply_id], (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      db.destroy();
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    if (results.length > 0) {
+      // User already liked the video -> Unlike it
+      const unlikeQuery =
+        "DELETE FROM reply_likes WHERE user_id = ? AND reply_id = ?";
+      db.query(unlikeQuery, [userId, reply_id], (err) => {
+        if (err) {
+          console.error("Database error:", err);
+          db.destroy();
+          return res.status(500).json({ message: "Database error" });
+        }
+        db.destroy();
+        return res.status(200).json({ message: "Reply unliked successfully" });
+      });
+    } else {
+      // User hasn't liked the comment -> Like it
+      const likeQuery =
+        "INSERT INTO reply_likes (user_id, reply_id) VALUES (?, ?)";
+      db.query(likeQuery, [userId, reply_id], (err) => {
+        if (err) {
+          console.error("Database error:", err);
+          db.destroy();
+          return res.status(500).json({ message: "Database error" });
+        }
+        db.destroy();
+        return res.status(200).json({ message: "Reply liked successfully" });
+      });
+    }
+  });
+});
+
+app.get("/reply-like-count", authenticateTokenGet, (req, res) => {
+  const { reply_id } = req.query;
+  const db = dbRequest(dbHost);
+  const query =
+    "SELECT COUNT(*) AS like_count FROM reply_likes WHERE reply_id = ?";
+  db.query(query, [reply_id], (err, results) => {
+    db.destroy();
+    if (err) {
+      console.error("Database error:", err);
+
+      return res.status(500).json({ message: "Database error" });
+    }
+    res.json({ like_count: results[0].like_count }); // Send response
+  });
+});
+
 // Anonymous version of record-view that doesn't require authentication
 app.post("/record-anonymous-view", (req, res) => {
   const db = dbRequest(dbHost);
@@ -664,8 +747,45 @@ app.post("/record-anonymous-view", (req, res) => {
     });
 });
 
+// addReply const
+export const addReply = async (req, res) => {
+  const db = dbRequest(dbHost);
+  const { commentId, content } = req.body;
+  const userId = req.user.userId;
+
+  if (!commentId || !content) {
+    db.destroy();
+    return res
+      .status(400)
+      .json({ message: "Comment ID and content are required" });
+  }
+
+  try {
+    const addReplyQuery =
+      "INSERT INTO REPLY (creator_id, content, comment_id) VALUES (?, ?, ?)";
+    db.query(addReplyQuery, [userId, content, commentId], (err, result) => {
+      if (err) {
+        console.error("Database error:", err);
+        db.destroy();
+        return res.status(500).json({ message: "Database error" });
+      }
+
+      db.destroy();
+      return res.status(201).json({
+        message: "Reply added successfully",
+        replyId: result.insertId,
+      });
+    });
+  } catch (error) {
+    console.error("Error:", error.message);
+    db.destroy();
+    return res.status(400).json({ message: error.message });
+  }
+};
+
 // Register routes
 app.post("/signup", signup);
+app.post("/addReply", addReply);
 // app.post("/login", login);
 
 // Start the Server
