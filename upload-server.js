@@ -179,9 +179,7 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
       const output = data.toString();
       console.log(`ffmpeg stderr: ${output}`);
 
-      // Parse progress from stderr if needed (as alternative to stdout progress)
-      const frameMatch = output.match(/frame=\s*(\d+)/);
-      const fpsMatch = output.match(/fps=\s*(\d+)/);
+      // Parse progress from stderr if needed
       const timeMatch = output.match(/time=\s*(\d+:\d+:\d+\.\d+)/);
 
       if (timeMatch && duration > 0) {
@@ -216,7 +214,6 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
         const db = dbRequest(dbHost);
         const insertQuery =
           "INSERT INTO videos (creator_id, title, description, fileName) VALUES (?, ?, ?, ?)";
-
         db.query(
           insertQuery,
           [creatorId, title, description, outputFile],
@@ -262,11 +259,16 @@ function deleteFile(filePath) {
   });
 }
 
+// ------------------------------
+// USER & VIDEO INFORMATION ENDPOINTS
+// ------------------------------
+
 // Get user info
 app.get("/user", (req, res) => {
   const db = dbRequest(dbHost);
   const { userID: userid } = req.query;
   if (!userid) {
+    db.destroy();
     return res.status(400).json({ message: "UserID is required" });
   }
   const selectQuery = "SELECT * FROM users WHERE id = ?";
@@ -346,7 +348,8 @@ app.post("/post-comment", authenticateToken, async (req, res) => {
     return res.status(400).json({ message: "Video ID and comment are required" });
   }
   try {
-    const insertQuery = "INSERT INTO comments (user_id, video_id, content) VALUES (?, ?, ?)";
+    const insertQuery =
+      "INSERT INTO comments (user_id, video_id, content) VALUES (?, ?, ?)";
     await db.promise().query(insertQuery, [userId, video_id, comment]);
     console.log("Comment successfully stored in database!");
     db.destroy();
@@ -392,7 +395,9 @@ app.post("/post-reply", authenticateToken, async (req, res) => {
   const userId = req.user.userId;
   if (!comment_id || !reply) {
     db.destroy();
-    return res.status(400).json({ message: "Comment ID and reply content are required" });
+    return res
+      .status(400)
+      .json({ message: "Comment ID and reply content are required" });
   }
   try {
     const insertQuery = "INSERT INTO reply (creator_id, content, comment_id) VALUES (?, ?, ?)";
@@ -426,7 +431,102 @@ app.get("/get-replies", async (req, res) => {
   }
 });
 
-// Use server.listen instead of app.listen to enable socket.io
+// ------------------------------
+// COMMENT LIKE ENDPOINTS
+// ------------------------------
+
+// Toggle like for a comment (requires authentication)
+app.post("/like-comment", authenticateToken, (req, res) => {
+  const db = dbRequest(dbHost);
+  const { comment_id } = req.body;
+  const userId = req.user.userId;
+
+  if (!comment_id) {
+    db.destroy();
+    return res.status(400).json({ message: "Comment ID is required" });
+  }
+
+  // Check if the user already liked the comment
+  const checkQuery = "SELECT * FROM comment_likes WHERE comment_id = ? AND user_id = ?";
+  db.query(checkQuery, [comment_id, userId], (err, results) => {
+    if (err) {
+      db.destroy();
+      return res.status(500).json({ message: "Database error", error: err });
+    }
+
+    if (results.length > 0) {
+      // Already liked; remove the like (unlike)
+      const deleteQuery = "DELETE FROM comment_likes WHERE comment_id = ? AND user_id = ?";
+      db.query(deleteQuery, [comment_id, userId], (err2, results2) => {
+        if (err2) {
+          db.destroy();
+          return res.status(500).json({ message: "Database error", error: err2 });
+        }
+        db.destroy();
+        return res.status(200).json({ message: "Comment unliked" });
+      });
+    } else {
+      // Not liked; add a like
+      const insertQuery = "INSERT INTO comment_likes (comment_id, user_id) VALUES (?, ?)";
+      db.query(insertQuery, [comment_id, userId], (err2, results2) => {
+        if (err2) {
+          db.destroy();
+          return res.status(500).json({ message: "Database error", error: err2 });
+        }
+        db.destroy();
+        return res.status(200).json({ message: "Comment liked" });
+      });
+    }
+  });
+});
+
+// Get the like count for a comment
+app.get("/comment-like-count", (req, res) => {
+  const db = dbRequest(dbHost);
+  const { comment_id } = req.query;
+  if (!comment_id) {
+    db.destroy();
+    return res.status(400).json({ message: "Comment ID is required" });
+  }
+  const selectQuery = "SELECT COUNT(*) AS likeCount FROM comment_likes WHERE comment_id = ?";
+  db.query(selectQuery, [comment_id], (err, results) => {
+    if (err) {
+      db.destroy();
+      return res.status(500).json({ message: "Database error", error: err });
+    }
+    db.destroy();
+    return res.status(200).json({ likeCount: results[0].likeCount });
+  });
+});
+
+// Check if the authenticated user has liked a comment
+app.get("/fetch-comment-liked", authenticateToken, (req, res) => {
+  const db = dbRequest(dbHost);
+  const { comment_id } = req.query;
+  const userId = req.user.userId;
+  if (!comment_id) {
+    db.destroy();
+    return res.status(400).json({ message: "Comment ID is required" });
+  }
+  const checkQuery = "SELECT * FROM comment_likes WHERE comment_id = ? AND user_id = ?";
+  db.query(checkQuery, [comment_id, userId], (err, results) => {
+    if (err) {
+      db.destroy();
+      return res.status(500).json({ message: "Database error", error: err });
+    }
+    db.destroy();
+    if (results.length > 0) {
+      return res.status(200).json({ liked: true });
+    } else {
+      return res.status(200).json({ liked: false });
+    }
+  });
+});
+
+// ------------------------------
+// START THE SERVER
+// ------------------------------
+
 server.listen(port, () => {
   console.log(`Upload Server is running at http://localhost:${port}`);
 });
