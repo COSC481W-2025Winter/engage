@@ -162,7 +162,6 @@ function Home() {
   useEffect(() => {
     const fetchCommentLikes = async () => {
       const newCommentLikeCount: { [key: number]: number } = {};
-      // Always fetch like count, regardless of loggedIn
       for (const comment of comments) {
         try {
           const likeCountResponse = await axios.get(`${uploadServer}/comment-like-count`, {
@@ -175,7 +174,6 @@ function Home() {
       }
       setCommentLikeCount(newCommentLikeCount);
 
-      // Only fetch if logged in
       if (loggedIn) {
         const token = localStorage.getItem("authToken");
         const newCommentLiked: { [key: number]: boolean } = {};
@@ -198,6 +196,53 @@ function Home() {
     fetchCommentLikes();
   }, [comments, loggedIn]);
 
+  // NEW: Fetch reply like counts and liked status for each reply
+  useEffect(() => {
+    const fetchReplyLikes = async () => {
+      const newReplyLikeCount: { [key: number]: number } = {};
+      for (const comment of comments) {
+        if (comment.replies && comment.replies.length > 0) {
+          for (const reply of comment.replies) {
+            try {
+              const response = await axios.get(`${uploadServer}/reply-like-count`, {
+                params: { reply_id: reply.id },
+              });
+              newReplyLikeCount[reply.id] = response.data.likeCount;
+            } catch (error) {
+              newReplyLikeCount[reply.id] = 0;
+            }
+          }
+        }
+      }
+      setReplyLikeCount(newReplyLikeCount);
+
+      if (loggedIn) {
+        const token = localStorage.getItem("authToken");
+        const newReplyLiked: { [key: number]: boolean } = {};
+        for (const comment of comments) {
+          if (comment.replies && comment.replies.length > 0) {
+            for (const reply of comment.replies) {
+              try {
+                const response = await axios.get(`${uploadServer}/fetch-reply-liked`, {
+                  params: { reply_id: reply.id },
+                  headers: { Authorization: token },
+                });
+                newReplyLiked[reply.id] = response.data.liked;
+              } catch (error) {
+                newReplyLiked[reply.id] = false;
+              }
+            }
+          }
+        }
+        setReplyLiked(newReplyLiked);
+      } else {
+        setReplyLiked({});
+      }
+    };
+
+    fetchReplyLikes();
+  }, [comments, loggedIn]);
+
   // Toggle like for a comment
   async function handleCommentLike(comment_id: number) {
     const token = localStorage.getItem("authToken");
@@ -211,7 +256,6 @@ function Home() {
         { comment_id },
         { headers: { Authorization: token } }
       );
-      // Toggle the liked state and update like count
       setCommentLiked((prev) => {
         const newLiked = { ...prev, [comment_id]: !prev[comment_id] };
         setCommentLikeCount((prevCount) => {
@@ -414,6 +458,7 @@ function Home() {
     }
   }
 
+  // Updated handleReplyLike: sends only the reply_id along with authentication
   async function handleReplyLike(reply_id: number) {
     if (!userID || !loggedIn) {
       alert("You must be logged in to like replies.");
@@ -425,15 +470,10 @@ function Home() {
       setLoggedIn(false);
       return;
     }
-    const fileName = currentVideo.split("/").pop();
-    if (!fileName) {
-      console.error("Error: fileName is missing.");
-      return;
-    }
     try {
       await axios.post(
         `${loginServer}/like-reply`,
-        { fileName, reply_id },
+        { reply_id },
         { params: { auth: localToken } }
       );
       setReplyLiked((prev) => {
@@ -484,7 +524,7 @@ function Home() {
       await axios.post(
         `${uploadServer}/post-comment`,
         { video_id: videoId, comment },
-        { headers: { Authorization: localToken || "" } } // might be empty if not logged in
+        { headers: { Authorization: localToken || "" } }
       );
 
       setComment("");
@@ -679,7 +719,6 @@ function Home() {
             )}
 
             <div className="comment-section">
-              {/* Toggle button to show/hide comment text field */}
               <button
                 onClick={() => setShowCommentInput((prev) => !prev)}
                 className="button"
@@ -688,7 +727,6 @@ function Home() {
                 Comment
               </button>
 
-              {/* Conditionally show the comment text field */}
               {showCommentInput && (
                 <div className="comment-input-div" style={{ marginBottom: "20px" }}>
                   <textarea
@@ -710,7 +748,6 @@ function Home() {
                       <strong>{c.username}</strong> ({c.created_at}): {c.comment}
                     </p>
 
-                    {/* Comment Like Button */}
                     <div
                       className="comment-like-section"
                       style={{ display: "flex", alignItems: "center", gap: "5px" }}
@@ -731,7 +768,6 @@ function Home() {
                       </span>
                     </div>
 
-                    {/* Replies */}
                     <div style={{ display: "flex", gap: "5px" }}>
                       {c.replies && c.replies.length > 0 && (
                         <div style={{ width: "24px", textAlign: "left", color: "black" }}>

@@ -77,11 +77,8 @@ io.on("connection", (socket) => {
   });
 });
 
-// ------------------------------
 // VIDEO UPLOAD & RELATED ENDPOINTS
-// ------------------------------
 
-// Upload video with authentication
 app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded" });
@@ -127,7 +124,6 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
   ffprobe.on("close", (code) => {
     if (code !== 0) {
       console.log("Could not determine video duration");
-      // Continue with transcoding anyway
     }
 
     // Now start the transcoding process
@@ -143,13 +139,12 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
       "-c:a",
       "copy",
       "-progress",
-      "pipe:1", // Output progress information to stdout
+      "pipe:1",
       outputPath,
     ]);
 
     let lastProgress = 0;
 
-    // Extract progress information from ffmpeg output
     ffmpeg.stdout.on("data", (data) => {
       const output = data.toString();
       const timeMatch = output.match(/time=(\d+:\d+:\d+\.\d+)/);
@@ -175,11 +170,9 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
     });
 
     ffmpeg.stderr.on("data", (data) => {
-      // ffmpeg outputs detailed information to stderr
       const output = data.toString();
       console.log(`ffmpeg stderr: ${output}`);
 
-      // Parse progress from stderr if needed
       const timeMatch = output.match(/time=\s*(\d+:\d+:\d+\.\d+)/);
 
       if (timeMatch && duration > 0) {
@@ -210,7 +203,6 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
       });
 
       if (code === 0) {
-        // Transcoding successful - now insert into database
         const db = dbRequest(dbHost);
         const insertQuery =
           "INSERT INTO videos (creator_id, title, description, fileName) VALUES (?, ?, ?, ?)";
@@ -218,12 +210,10 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
           insertQuery,
           [creatorId, title, description, outputFile],
           (err, result) => {
-            // Delete original file regardless of DB outcome
             deleteFile(filePath);
 
             if (err) {
               console.error("Error inserting video into database: ", err);
-              // If DB insertion fails, also delete the transcoded file
               deleteFile(outputPath);
               db.destroy();
               return res
@@ -240,7 +230,6 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
           }
         );
       } else {
-        // Transcoding failed - clean up files and return error
         deleteFile(filePath);
         deleteFile(outputPath);
         return res.status(400).json({ message: "Transcoding failed" });
@@ -259,11 +248,9 @@ function deleteFile(filePath) {
   });
 }
 
-// ------------------------------
-// USER & VIDEO INFORMATION ENDPOINTS
-// ------------------------------
 
-// Get user info
+// USER & VIDEO INFORMATION ENDPOINTS
+
 app.get("/user", (req, res) => {
   const db = dbRequest(dbHost);
   const { userID: userid } = req.query;
@@ -287,7 +274,6 @@ app.get("/user", (req, res) => {
   });
 });
 
-// Get video info
 app.get("/video", (req, res) => {
   const db = dbRequest(dbHost);
   const { fileName: filename } = req.query;
@@ -311,7 +297,6 @@ app.get("/video", (req, res) => {
   });
 });
 
-// Get video list
 app.get("/video-list", (req, res) => {
   const db = dbRequest(dbHost);
   const selectQuery = "SELECT fileName FROM videos";
@@ -330,11 +315,9 @@ app.get("/video-list", (req, res) => {
   });
 });
 
-// ------------------------------
-// COMMENT & REPLY ENDPOINTS
-// ------------------------------
 
-// Post a comment (requires authentication)
+// COMMENT & REPLY ENDPOINTS
+
 app.post("/post-comment", authenticateToken, async (req, res) => {
   const db = dbRequest(dbHost);
   const { video_id, comment } = req.body;
@@ -361,7 +344,6 @@ app.post("/post-comment", authenticateToken, async (req, res) => {
   }
 });
 
-// Get comments for a video
 app.get("/get-comments", async (req, res) => {
   const db = dbRequest(dbHost);
   const { fileName } = req.query;
@@ -388,7 +370,6 @@ app.get("/get-comments", async (req, res) => {
   }
 });
 
-// Post a reply to a comment (requires authentication)
 app.post("/post-reply", authenticateToken, async (req, res) => {
   const db = dbRequest(dbHost);
   const { comment_id, reply } = req.body;
@@ -411,7 +392,6 @@ app.post("/post-reply", authenticateToken, async (req, res) => {
   }
 });
 
-// Get replies for a given comment
 app.get("/get-replies", async (req, res) => {
   const db = dbRequest(dbHost);
   const { comment_id } = req.query;
@@ -431,11 +411,9 @@ app.get("/get-replies", async (req, res) => {
   }
 });
 
-// ------------------------------
-// COMMENT LIKE ENDPOINTS
-// ------------------------------
 
-// Toggle like for a comment (requires authentication)
+// COMMENT LIKE ENDPOINTS
+
 app.post("/like-comment", authenticateToken, (req, res) => {
   const db = dbRequest(dbHost);
   const { comment_id } = req.body;
@@ -446,7 +424,6 @@ app.post("/like-comment", authenticateToken, (req, res) => {
     return res.status(400).json({ message: "Comment ID is required" });
   }
 
-  // Check if the user already liked the comment
   const checkQuery = "SELECT * FROM comment_likes WHERE comment_id = ? AND user_id = ?";
   db.query(checkQuery, [comment_id, userId], (err, results) => {
     if (err) {
@@ -455,9 +432,8 @@ app.post("/like-comment", authenticateToken, (req, res) => {
     }
 
     if (results.length > 0) {
-      // Already liked; remove the like (unlike)
       const deleteQuery = "DELETE FROM comment_likes WHERE comment_id = ? AND user_id = ?";
-      db.query(deleteQuery, [comment_id, userId], (err2, results2) => {
+      db.query(deleteQuery, [comment_id, userId], (err2) => {
         if (err2) {
           db.destroy();
           return res.status(500).json({ message: "Database error", error: err2 });
@@ -466,9 +442,8 @@ app.post("/like-comment", authenticateToken, (req, res) => {
         return res.status(200).json({ message: "Comment unliked" });
       });
     } else {
-      // Not liked; add a like
       const insertQuery = "INSERT INTO comment_likes (comment_id, user_id) VALUES (?, ?)";
-      db.query(insertQuery, [comment_id, userId], (err2, results2) => {
+      db.query(insertQuery, [comment_id, userId], (err2) => {
         if (err2) {
           db.destroy();
           return res.status(500).json({ message: "Database error", error: err2 });
@@ -480,7 +455,6 @@ app.post("/like-comment", authenticateToken, (req, res) => {
   });
 });
 
-// Get the like count for a comment
 app.get("/comment-like-count", (req, res) => {
   const db = dbRequest(dbHost);
   const { comment_id } = req.query;
@@ -499,7 +473,6 @@ app.get("/comment-like-count", (req, res) => {
   });
 });
 
-// Check if the authenticated user has liked a comment
 app.get("/fetch-comment-liked", authenticateToken, (req, res) => {
   const db = dbRequest(dbHost);
   const { comment_id } = req.query;
@@ -510,6 +483,91 @@ app.get("/fetch-comment-liked", authenticateToken, (req, res) => {
   }
   const checkQuery = "SELECT * FROM comment_likes WHERE comment_id = ? AND user_id = ?";
   db.query(checkQuery, [comment_id, userId], (err, results) => {
+    if (err) {
+      db.destroy();
+      return res.status(500).json({ message: "Database error", error: err });
+    }
+    db.destroy();
+    if (results.length > 0) {
+      return res.status(200).json({ liked: true });
+    } else {
+      return res.status(200).json({ liked: false });
+    }
+  });
+});
+
+
+// REPLY LIKE ENDPOINTS (NEW) so we can see the likes
+
+app.post("/like-reply", authenticateToken, (req, res) => {
+  const db = dbRequest(dbHost);
+  const { reply_id } = req.body;
+  const userId = req.user.userId;
+
+  if (!reply_id) {
+    db.destroy();
+    return res.status(400).json({ message: "Reply ID is required" });
+  }
+
+  const checkQuery = "SELECT * FROM reply_likes WHERE reply_id = ? AND user_id = ?";
+  db.query(checkQuery, [reply_id, userId], (err, results) => {
+    if (err) {
+      db.destroy();
+      return res.status(500).json({ message: "Database error", error: err });
+    }
+
+    if (results.length > 0) {
+      const deleteQuery = "DELETE FROM reply_likes WHERE reply_id = ? AND user_id = ?";
+      db.query(deleteQuery, [reply_id, userId], (err2) => {
+        if (err2) {
+          db.destroy();
+          return res.status(500).json({ message: "Database error", error: err2 });
+        }
+        db.destroy();
+        return res.status(200).json({ message: "Reply unliked" });
+      });
+    } else {
+      const insertQuery = "INSERT INTO reply_likes (reply_id, user_id) VALUES (?, ?)";
+      db.query(insertQuery, [reply_id, userId], (err2) => {
+        if (err2) {
+          db.destroy();
+          return res.status(500).json({ message: "Database error", error: err2 });
+        }
+        db.destroy();
+        return res.status(200).json({ message: "Reply liked" });
+      });
+    }
+  });
+});
+
+app.get("/reply-like-count", (req, res) => {
+  const db = dbRequest(dbHost);
+  const { reply_id } = req.query;
+  if (!reply_id) {
+    db.destroy();
+    return res.status(400).json({ message: "Reply ID is required" });
+  }
+  const selectQuery = "SELECT COUNT(*) AS likeCount FROM reply_likes WHERE reply_id = ?";
+  db.query(selectQuery, [reply_id], (err, results) => {
+    if (err) {
+      db.destroy();
+      return res.status(500).json({ message: "Database error", error: err });
+    }
+    db.destroy();
+    return res.status(200).json({ likeCount: results[0].likeCount });
+  });
+});
+
+app.get("/fetch-reply-liked", authenticateToken, (req, res) => {
+  const db = dbRequest(dbHost);
+  const { reply_id } = req.query;
+  const userId = req.user.userId;
+  if (!reply_id) {
+    db.destroy();
+    return res.status(400).json({ message: "Reply ID is required" });
+  }
+  const checkQuery = "SELECT * FROM reply_likes WHERE reply_id = ? AND user_id = ?";
+  db.query(checkQuery, [reply_id, userId], (err, results) => {
     if (err) {
       db.destroy();
       return res.status(500).json({ message: "Database error", error: err });
