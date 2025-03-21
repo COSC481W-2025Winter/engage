@@ -27,7 +27,6 @@ app.use(cors());
 
 import dbRequest from "./db.js";
 
-
 // Nodemailer setup
 const emailUser = process.env.VITE_EMAIL_USER;
 const emailPassword = process.env.VITE_EMAIL_PASSWORD;
@@ -115,8 +114,8 @@ export const signup = async (req, res) => {
           const mailOptions = {
             from: emailUser, // your email
             to: email,
-            subject: "Verify Your Email",
-            text: `Click this link to verify your email: ${verificationLink}`,
+            subject: "Confirm Your Email for Engage",
+            text: `Thank you for signing up! To complete your registration, please confirm your email by following this link: ${verificationLink}. If you didn’t request this, you can ignore this email.`,
           };
 
           transporter.sendMail(mailOptions, (error, info) => {
@@ -164,17 +163,14 @@ app.get("/recover-account", (req, res) => {
 
     const email = decoded.email;
 
-    const updateQuery =
-      "UPDATE users SET recoveryToken = NULL WHERE email = ?";
-      db.query(updateQuery, [email], (err, result) => {
-        if (err) {
-          db.destroy();
-          return res.status(500).json({ message: "Database error" });
-        }
+    const updateQuery = "UPDATE users SET recoveryToken = NULL WHERE email = ?";
+    db.query(updateQuery, [email], (err, result) => {
+      if (err) {
         db.destroy();
-        return res
-          .status(200)
-          .json({ message: email });
+        return res.status(500).json({ message: "Database error" });
+      }
+      db.destroy();
+      return res.status(200).json({ message: email });
     });
   });
 });
@@ -214,12 +210,13 @@ app.post("/send-recovery-link", (req, res) => {
       subject: "Password Recovery",
       text: `The link will expire in 1 hour. Click this link to reset your password: ${recoveryLink}`,
     };
-    const attachTokenQuery = "UPDATE users SET recoveryToken = ? WHERE email = ?";
+    const attachTokenQuery =
+      "UPDATE users SET recoveryToken = ? WHERE email = ?";
     db.query(attachTokenQuery, [recoveryToken, email], (err) => {
       if (err) {
-      console.error("Database error:", err);
-      db.destroy();
-      return res.status(500).json({ message: "Database error" });
+        console.error("Database error:", err);
+        db.destroy();
+        return res.status(500).json({ message: "Database error" });
       }
     });
 
@@ -237,7 +234,6 @@ app.post("/send-recovery-link", (req, res) => {
     });
   });
 });
-
 
 // Email Verification Route
 app.get("/verify-email", (req, res) => {
