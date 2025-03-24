@@ -3,6 +3,7 @@
 
 *{
   font-family: "Prompt", sans-serif;
+  box-sizing: border-box;
 }
 $background-color: #000;
 $app-background: #fff;
@@ -13,7 +14,7 @@ $uploadColor: rgb(0, 191, 255);
 
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
+    // font-family: Arial, sans-serif;
     background-color: $background-color;
     color: $text-color;
     // display: flex;

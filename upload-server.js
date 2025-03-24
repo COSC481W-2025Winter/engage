@@ -104,8 +104,9 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
   }
 
   const filePath = path.join("./media", req.file.filename);
-  const outputPath = filePath.replace(".mp4", "trans.mp4");
-  const outputFile = req.file.filename.replace(".mp4", "trans.mp4");
+  // Replace the .(insert file extension) with trans.mp4
+  const outputPath = filePath.replace(/\.[^/.]+$/, "trans.mp4");
+  const outputFile = req.file.filename.replace(/\.[^/.]+$/, "trans.mp4");
 
   // Get duration of the video to calculate progress
   const ffprobe = spawn("ffprobe", [

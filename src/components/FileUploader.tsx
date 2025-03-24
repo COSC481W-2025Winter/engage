@@ -86,12 +86,30 @@ export default function FileUploader() {
     }
   }
 
-  function isMP4(file: File) {
+  function isValidFile(file: File) {
     const fileName: string = file.name;
     const fileExtension = fileName?.split(".").pop()?.toLowerCase();
-    return fileExtension === "mp4";
+    return fileExtension === "mp4" || fileExtension === "mkv" || fileExtension === "mov";
   }
 
+  function durationLimit(file: File) {
+    return new Promise<boolean>((resolve) => {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+
+      video.onloadedmetadata = () => {
+      window.URL.revokeObjectURL(video.src);
+      const duration = video.duration;
+      resolve(duration <= 60); // Check if duration is under a minute
+      };
+
+      video.onerror = () => {
+      resolve(false); // If there's an error, consider it invalid
+      };
+
+      video.src = URL.createObjectURL(file);
+    });
+  }
   async function handleFileUpload() {
     if (!file) return;
     if (!title){
@@ -100,8 +118,8 @@ export default function FileUploader() {
     }
     // console.log("File size: " + file.size);
     // console.log("Max file size: " + MAX_FILE_SIZE);
-    if (!isMP4(file)) {
-      alert("File is not an mp4.");
+    if (!isValidFile(file)) {
+      alert("File is not an valid video file.\nAcceptable files: mp4, mkv, mov");
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
@@ -200,10 +218,20 @@ export default function FileUploader() {
 
 
       <div className="form-group ">
-        <input type="file" accept="video/mp4" onChange={handleFileChange} />
+        <input
+          type="file"
+          accept="video/*"
+          onChange={handleFileChange}
+        />
         <br />
         {file && status === "idle" && (
-          <button style={{margin: "15px auto"}} className="button primary" onClick={handleFileUpload}>Upload</button>
+          <button
+        style={{ margin: "15px auto" }}
+        className="button success"
+        onClick={handleFileUpload}
+          >
+        Upload
+          </button>
         )}
       </div>
 

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import "./styles/auth.scss";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 // let uploadServer = "http://localhost:3001";
 // if (import.meta.env.VITE_UPLOAD_SERVER !== undefined) {
@@ -20,6 +20,7 @@ if (import.meta.env.VITE_LOGIN_SERVER !== undefined) {
 const ResetPassword: React.FC = () => {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [emailMessage, setEmailMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,7 +35,8 @@ const ResetPassword: React.FC = () => {
         email,
       }
       );
-      setMessage(response.data.message || "Recovery link sent successfully");
+      setMessage("Recovery link sent successfully.");
+      setEmailMessage("Please check your email and spam folder.");
     } catch (err: any) {
       setError(err.response?.data?.message || "An error occurred");
     }
@@ -44,7 +46,7 @@ const ResetPassword: React.FC = () => {
     <div className="auth__body">
       <div className="auth__form">
         <h2>Reset Password</h2>
-        {message && <div className="auth__success">{message}</div>}
+        {message && <div className="auth__success">{message}<br />{emailMessage}</div>}
         {error && <div className="auth__error">{error}</div>}
         <form onSubmit={handleSubmit}>
 

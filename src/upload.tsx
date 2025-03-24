@@ -71,7 +71,7 @@ useEffect(() => {
         <div className="upload-banner">
         <h1 className="upload-title">Upload Your Video</h1>
         <h3>Disclaimer: The host is not responsible for any content on this site.</h3>
-        <p>Max file size is 80MB.</p>
+        <p>Max file size is 80MB. <b style={{color: "lightgreen"}}>MOV and MKV are now accepted alongside MP4.</b></p>
         </div>
         <div className="uploader">
         <FileUploader />

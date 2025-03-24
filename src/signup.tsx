@@ -30,6 +30,7 @@ const Signup: React.FC = () => {
     confirmPassword?: string;
   }>({});
   const [successMessage, setSuccessMessage] = useState<string>("");
+  const [emailMessage, setEmailMessage] = useState<string>("");
 
   const navigate = useNavigate();
 
@@ -52,8 +53,9 @@ const Signup: React.FC = () => {
         .post(`${loginServer}/signup`, formValues)
         .then(() => {
           setSuccessMessage(
-            "You have successfully signed up! Please verify your email."
+            "You have successfully signed up! Please check your email SPAM folder to verify your email."
           );
+          setEmailMessage("Check your spam folder if you don't see the email.");
           setTimeout(() => {
             navigate("/login"); // Redirect after 3 seconds
           }, 3000);
@@ -85,18 +87,18 @@ const Signup: React.FC = () => {
       <div className="auth__form">
         <h2>Sign up</h2>
         <p>
-      Password requirements:
-      <ul>
-        <li>At least 8 characters long</li>
-        <li>One uppercase letter</li>
-        <li>One lowercase letter</li>
-        <li>One number</li>
-        <li>One special character</li>
-        </ul>
+          Password requirements:
+          <ul>
+            <li>At least 8 characters long</li>
+            <li>One uppercase letter</li>
+            <li>One lowercase letter</li>
+            <li>One number</li>
+            <li>One special character</li>
+          </ul>
         </p>
         <div className="auth__container">
           {successMessage && (
-            <div className="auth__success-message">{successMessage}</div>
+            <div className="auth__success-message">{successMessage}<br />{emailMessage}</div>
           )}
           {errorMessage && (
             <div className="auth__error-message">{errorMessage}</div>
@@ -181,18 +183,21 @@ const Signup: React.FC = () => {
                 onChange={() => setAgreeToTerms(!agreeToTerms)}
               />
               <label htmlFor="agreeToTerms" className="auth__terms-label">
-                I agree to the <Link className="terms-text" to="/terms">Terms and Conditions</Link>
+                I agree to the{" "}
+                <Link className="terms-text" to="/terms">
+                  Terms and Conditions
+                </Link>
               </label>
             </div>
 
             <div className="auth__buttons-container">
-                <button
+              <button
                 type="submit"
                 className={`button ${!agreeToTerms ? "greyed" : "success"}`}
                 disabled={!agreeToTerms} // Disable the button if the checkbox is unchecked
-                >
+              >
                 Sign up
-                </button>
+              </button>
               <Link to="/login" className="button primary">
                 Log in
               </Link>

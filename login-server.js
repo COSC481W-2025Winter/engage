@@ -27,7 +27,6 @@ app.use(cors());
 
 import dbRequest from "./db.js";
 
-
 // Nodemailer setup
 const emailUser = process.env.VITE_EMAIL_USER;
 const emailPassword = process.env.VITE_EMAIL_PASSWORD;
@@ -115,8 +114,8 @@ export const signup = async (req, res) => {
           const mailOptions = {
             from: emailUser, // your email
             to: email,
-            subject: "Verify Your Email",
-            text: `Click this link to verify your email: ${verificationLink}`,
+            subject: "Confirm Your Email for Engage",
+            text: `Welcome to Engage!\nThank you for signing up! To complete your registration, please confirm your email by following this link: ${verificationLink}!\nIf you did not create an account, please ignore this email.\nBest regards,\nThe Engage Team`,
           };
 
           transporter.sendMail(mailOptions, (error, info) => {
@@ -127,7 +126,7 @@ export const signup = async (req, res) => {
             db.destroy();
             return res.status(201).json({
               message:
-                "User signed up successfully. Please check your email to verify your account.",
+                "User signed up successfully. Please check your email SPAM folder to verify your account.",
             });
           });
         });
@@ -164,17 +163,14 @@ app.get("/recover-account", (req, res) => {
 
     const email = decoded.email;
 
-    const updateQuery =
-      "UPDATE users SET recoveryToken = NULL WHERE email = ?";
-      db.query(updateQuery, [email], (err, result) => {
-        if (err) {
-          db.destroy();
-          return res.status(500).json({ message: "Database error" });
-        }
+    const updateQuery = "UPDATE users SET recoveryToken = NULL WHERE email = ?";
+    db.query(updateQuery, [email], (err, result) => {
+      if (err) {
         db.destroy();
-        return res
-          .status(200)
-          .json({ message: email });
+        return res.status(500).json({ message: "Database error" });
+      }
+      db.destroy();
+      return res.status(200).json({ message: email });
     });
   });
 });
@@ -211,15 +207,16 @@ app.post("/send-recovery-link", (req, res) => {
     const mailOptions = {
       from: emailUser,
       to: email,
-      subject: "Password Recovery",
-      text: `The link will expire in 1 hour. Click this link to reset your password: ${recoveryLink}`,
+      subject: "Engage: Password Recovery",
+      text: `Reset your password here: ${recoveryLink}\nYour token will expire in 1 hour.`,
     };
-    const attachTokenQuery = "UPDATE users SET recoveryToken = ? WHERE email = ?";
+    const attachTokenQuery =
+      "UPDATE users SET recoveryToken = ? WHERE email = ?";
     db.query(attachTokenQuery, [recoveryToken, email], (err) => {
       if (err) {
-      console.error("Database error:", err);
-      db.destroy();
-      return res.status(500).json({ message: "Database error" });
+        console.error("Database error:", err);
+        db.destroy();
+        return res.status(500).json({ message: "Database error" });
       }
     });
 
@@ -232,12 +229,11 @@ app.post("/send-recovery-link", (req, res) => {
 
       db.destroy();
       return res.status(200).json({
-        message: "Recovery link sent successfully. Please check your email.",
+        message: "Recovery link sent successfully. Please check your email and spam folder.",
       });
     });
   });
 });
-
 
 // Email Verification Route
 app.get("/verify-email", (req, res) => {

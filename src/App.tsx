@@ -729,6 +729,12 @@ function Home() {
           )}
         {/* Comment Section toggled by the COMMENT button */}
         {/* {showComments && ( */}
+        <div className="comment-notice">
+
+        <u>Experimental feature:<br /></u>
+        <i>
+            Comment functionality may be broken</i>
+        </div>
           <div
             className="comment-section"
             // style={{
@@ -742,6 +748,7 @@ function Home() {
             //   overflowY: "auto",
             // }}
           >
+            
             <div className="comments-list">
               {comments.map((c) => (
                 <div key={c.id} className="comment-box" style={{color:"black", textAlign: "left"}}>
