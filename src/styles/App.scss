@@ -264,6 +264,32 @@ body {
   }
 }
 
+
+@keyframes barrel-roll {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes reverse-barrel-roll {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+
+.reverse-barrel-roll {
+  animation: reverse-barrel-roll 1s ease forwards;
+}
+
+.barrel-roll {
+  animation: barrel-roll 1s ease forwards;
+}
+
 .fade-out {
   animation: fade-out 0.1s ease-out forwards;
 }

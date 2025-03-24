@@ -114,6 +114,20 @@ const LikeButton: React.FC<LikeButtonProps> = ({
       console.error("Error liking/unliking video:", error);
       alert("Failed to process like. Please try again.");
     }
+    const homeElement = document.querySelector(".app");
+    if (homeElement) {
+      if (liked) {
+        homeElement.classList.add("reverse-barrel-roll");
+        setTimeout(() => {
+          homeElement.classList.remove("reverse-barrel-roll");
+        }, 2000);
+      } else {
+        homeElement.classList.add("barrel-roll");
+        setTimeout(() => {
+          homeElement.classList.remove("barrel-roll");
+        }, 2000);
+      }
+    }
   }
 
   return (
