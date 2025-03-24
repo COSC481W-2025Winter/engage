@@ -283,11 +283,11 @@ body {
 }
 
 .reverse-barrel-roll {
-  animation: reverse-barrel-roll 1s ease forwards;
+  animation: reverse-barrel-roll 0.1s linear infinite;
 }
 
 .barrel-roll {
-  animation: barrel-roll 1s ease forwards;
+  animation: barrel-roll 0.1s linear infinite;
 }
 
 .fade-out {

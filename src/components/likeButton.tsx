@@ -118,14 +118,14 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     if (homeElement) {
       if (liked) {
         homeElement.classList.add("reverse-barrel-roll");
-        setTimeout(() => {
-          homeElement.classList.remove("reverse-barrel-roll");
-        }, 2000);
+        // setTimeout(() => {
+        //   homeElement.classList.remove("reverse-barrel-roll");
+        // }, 2000);
       } else {
         homeElement.classList.add("barrel-roll");
-        setTimeout(() => {
-          homeElement.classList.remove("barrel-roll");
-        }, 2000);
+        // setTimeout(() => {
+        //   homeElement.classList.remove("barrel-roll");
+        // }, 2000);
       }
     }
   }
