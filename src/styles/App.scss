@@ -1,10 +1,10 @@
-@use 'global.scss' as *;
+@use "global.scss" as *;
 
 body {
   // display: flex;
 }
 
-.app{
+.app {
   animation: fade-in 0.3s ease-in forwards;
 }
 .app-container {
@@ -51,7 +51,7 @@ body {
   justify-content: flex-start;
 }
 
-.video-details{
+.video-details {
   opacity: 0;
   animation: fade-in 0.3s 0.2s ease-in forwards;
   align-items: flex-end;
@@ -82,16 +82,15 @@ body {
   animation: fade-in 0.3s 0.2s ease-in forwards;
 }
 
-.video-stats{
-  *{
+.video-stats {
+  * {
     margin: 0px 5px;
   }
 }
-.download-next{
-  *{
+.download-next {
+  * {
     margin: 0px 5px;
   }
-  
 }
 /* Control Button Styling */
 // .control-button {
@@ -116,16 +115,14 @@ body {
 //   }
 // }
 
-
-
-.views{
+.views {
   border-radius: 25px;
   // border: 3px solid #ddd;
   // display: inline-block;
   color: #ddd;
   font-size: 16px;
   font-weight: bold;
-  padding: 16px 25px;
+  padding: 10px 10px;
   text-decoration: none;
   text-shadow: 0px 0px 13px #283966;
   width: auto; // Let buttons size to their content
@@ -133,7 +130,17 @@ body {
   // display: inline-block;
   transition: all 0.3s ease;
 }
-
+.comment-button {
+  color: #ddd;
+  font-size: 16px;
+  padding: 10px 10px;
+  font-weight: bold;
+  text-decoration: none;
+  text-shadow: 0px 0px 13px #283966;
+  min-width: 120px;
+  width: auto;
+  transition: all 0.3s ease;
+}
 /* Our new user button */
 .user-button {
   background-color: #065527;
@@ -155,14 +162,13 @@ body {
   }
 }
 
-
-.button.not-liked{
-  &:hover{
+.button.not-liked {
+  &:hover {
     color: #f10372;
     padding: 18px 35px;
   }
 }
-.button.liked{
+.button.liked {
   background-color: #f10372;
   border-radius: 25px;
   border: 3px solid #ddd;
@@ -181,7 +187,6 @@ body {
 
   &:hover {
     background-color: #ff75b6;
-    
   }
 }
 // .like-button.not-liked{
@@ -245,7 +250,6 @@ body {
   }
 }
 
-
 @keyframes fade-in {
   0% {
     opacity: 0; // Fully transparent
@@ -268,7 +272,7 @@ body {
   animation: fade-out 0.1s ease-out forwards;
 }
 
-.fade-in{
+.fade-in {
   animation: fade-in 0.1s ease-in forwards;
 }
 
@@ -285,7 +289,7 @@ body {
   text-decoration: none;
   text-shadow: 0px 0px 13px #283966;
   transition: all ease-out 0.3s;
-  
+
   &:hover {
     font-size: 24px;
     transition: all ease-out 0.3s;
@@ -297,14 +301,13 @@ body {
   }
 }
 
-
-#video{
+#video {
   max-height: 65vh;
   // width: 90vw;
   max-width: 60vw;
 }
 
-.comment-section{
+.comment-section {
   // position:fixed;
   max-width: 250px;
   width: 250px;
@@ -317,7 +320,7 @@ body {
   background-color: #000;
   border: 3px solid #ddd;
   border-radius: 10px;
-  padding:10px;
+  padding: 10px;
   overflow-y: scroll;
 }
 
@@ -332,7 +335,7 @@ body {
   padding-bottom: 15px; /* Padding inside each comment */
 }
 
-.reply-icon{
+.reply-icon {
   margin-left: 20px;
   cursor: pointer;
 }
@@ -341,9 +344,8 @@ body {
   margin-top: 20px;
 }
 
-
 // Remove this once comments is fixed
-.comment-notice{
+.comment-notice {
   color: white;
   background-color: #b411057c;
   width: 280px;
@@ -353,18 +355,18 @@ body {
 // Mobile SCSS
 
 @media screen and (max-width: 870px) {
-  .comment-notice{
+  .comment-notice {
     width: 75vw;
     align-self: center;
   }
-  .button.not-liked{
-    &:hover{
+  .button.not-liked {
+    &:hover {
       color: #f10372;
       padding: 10px;
     }
   }
-  .comment-section{
-    align-self:center;
+  .comment-section {
+    align-self: center;
     height: 40vh;
     max-height: 40vh;
   }
@@ -380,7 +382,7 @@ body {
 
   .video-player {
     height: 70vh; // Adjust height for smaller screens
-    #video{
+    #video {
       max-height: 60vh;
       max-width: 90vw;
     }
@@ -401,15 +403,18 @@ body {
   //   gap: 15px;
   // }
 
-  .button, .user-button, .upload-button {
+  .button,
+  .user-button,
+  .upload-button {
     font-size: 14px; // Reduce font size for smaller screens
     padding: 10px 20px;
   }
 
-  .upload-section, .login-button-section, .back-button-section {
+  .upload-section,
+  .login-button-section,
+  .back-button-section {
     position: static; // Remove absolute positioning for better layout
     margin: 10px 0;
     text-align: center;
   }
 }
-
