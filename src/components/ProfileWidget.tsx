@@ -12,58 +12,90 @@ const ProfileWidget: React.FC<Props> = ({ isLoggedIn, userId, loginServer }) => 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string>("");
 
-  const handleToggle = () => setShowPopup(!showPopup);
+  // 🔍 Toggle popup state
+  const togglePopup = () => {
+    console.log("✅ React onClick triggered (togglePopup)");
+    setShowPopup((prev) => !prev);
+  };
 
+  // 🧪 Confirm component mounts and userId is passed in
+  useEffect(() => {
+    console.log("✅ ProfileWidget mounted with userId:", userId);
+    console.log("✅ loginServer:", loginServer);
+
+    // Add native listener to test if JS interference is causing issues
+    const el = document.getElementById("homepage-profile-pic");
+    if (el) {
+      el.addEventListener("click", () => {
+        console.log("🧪 Native JS listener triggered!");
+      });
+    }
+
+    // Optional cleanup
+    return () => {
+      if (el) {
+        el.removeEventListener("click", () => {});
+      }
+    };
+  }, []);
+
+  // Load profile image from server
   useEffect(() => {
     if (userId) {
-      setImageUrl(`${loginServer}/profile-picture/${userId}`);
-    } else {
-      setImageUrl("/profile-pics/default.png");
+      const url = `${loginServer}/profile-picture/${userId}`;
+      setImageUrl(url);
+      console.log("🔁 Image URL set to:", url);
     }
   }, [userId, loginServer]);
 
+  // Handle file upload
   const handleUpload = async () => {
     if (!selectedFile || !userId) return;
 
-    console.log("Triggered upload!");
-    console.log("Target:", `${loginServer}/upload-profile-picture`);
-
+    const token = localStorage.getItem("authToken");
     const formData = new FormData();
     formData.append("profilePicture", selectedFile);
 
+    console.log("🚀 Uploading to:", `${loginServer}/upload-profile-picture`);
+
     try {
-      await axios.post(`${loginServer}/upload-profile-picture`, formData, {
+      const res = await axios.post(`${loginServer}/upload-profile-picture`, formData, {
         headers: {
-          Authorization: localStorage.getItem("authToken"),
+          Authorization: token,
           "Content-Type": "multipart/form-data",
         },
       });
 
-      // Force reload image to bypass cache
+      console.log("✅ Upload success:", res.data);
       setImageUrl(`${loginServer}/profile-picture/${userId}?v=${Date.now()}`);
       setSelectedFile(null);
     } catch (err) {
-      console.error("Upload failed", err);
+      console.error("❌ Upload failed:", err);
     }
   };
 
   return (
-    <div style={{ position: "relative", display: "inline-block" }}>
-      {/* Profile Image */}
+    <div style={{ border: "4px dashed red", padding: "10px", zIndex: 9999 }}>
       <img
-        src={imageUrl}
+        id="homepage-profile-pic"
+        src={imageUrl || "/profile-pics/default.png"}
         alt="Profile"
+        onClick={() => {
+          console.log("IMG CLICK from React!");
+          togglePopup();
+        }}
         style={{
           width: "60px",
           height: "60px",
           borderRadius: "50%",
           cursor: "pointer",
-          border: "2px solid #555",
+          border: "2px solid limegreen",
+          position: "relative",
+          zIndex: 9999,
+          pointerEvents: "auto",
         }}
-        onClick={handleToggle}
       />
 
-      {/* Popup UI */}
       {showPopup && (
         <div
           style={{
@@ -75,22 +107,22 @@ const ProfileWidget: React.FC<Props> = ({ isLoggedIn, userId, loginServer }) => 
             padding: "10px",
             borderRadius: "8px",
             boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
-            zIndex: 1000,
+            zIndex: 10000,
             width: "200px",
             textAlign: "center",
           }}
         >
           {isLoggedIn ? (
             <>
-              <p>Change your profile picture</p>
+              <p>Change Profile Picture</p>
               <input
                 type="file"
                 accept="image/*"
                 onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
               />
               <button
-                style={{ marginTop: "8px" }}
                 onClick={handleUpload}
+                style={{ marginTop: "8px" }}
                 disabled={!selectedFile}
               >
                 Upload

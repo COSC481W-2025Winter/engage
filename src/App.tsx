@@ -718,14 +718,19 @@ function Home() {
             <>
                {/*Profile Picture ABOVE the Engager label */}
                <div style={{ display: "flex", justifyContent: "center", marginBottom: "0.5rem" }}>
-               <ProfileWidget
-                userId={Number(localStorage.getItem("userId"))}
-                 isLoggedIn={!!localStorage.getItem("authToken")}
-                loginServer={loginServer}
-                />
+               {loggedIn && userID !== 0 && (
+                <ProfileWidget
+                userId={userID}
+                isLoggedIn={loggedIn}
+                loginServer="http://localhost:3001"
+              />
+      )}
+
+                <p style={{ color: "lime" }}>✅ Widget Rendered Here</p>
 
 
         </div>
+              
               <h1>{currentVideoTitle}</h1>
               <h2>Engager: {currentVideoCreatorName}</h2>
               <h3>Uploaded: {currentVideoDate}</h3>
