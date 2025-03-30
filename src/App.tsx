@@ -15,6 +15,7 @@ import Terms from "./terms.tsx";
 import LikeButton from "./components/likeButton.tsx";
 import TopBar from "./components/TopBar.tsx";
 import RecoverAccount from "./recoverAccount.tsx";
+import FeaturedVideos from "./FeaturedVideos";  // <-- Added new import for FeaturedVideos
 
 // Dynamically import all video files from the media folder
 const videos = import.meta.glob("../media/*trans.mp4");
@@ -892,6 +893,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
         <Route path="/recover-account/:token" element={<RecoverAccount />} />
+        <Route path="/featured" element={<FeaturedVideos />} /> {/* <-- New FeaturedVideos route added */}
         <Route element={<PrivateRoute />}>
           <Route path="/user" element={<User />} />
           <Route path="/upload" element={<Upload />} />
