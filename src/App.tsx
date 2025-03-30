@@ -15,6 +15,7 @@ import Terms from "./terms.tsx";
 import LikeButton from "./components/likeButton.tsx";
 import TopBar from "./components/TopBar.tsx";
 import RecoverAccount from "./recoverAccount.tsx";
+import ProfileWidget from "./components/ProfileWidget";
 // import { createContext, useContext } from 'react';
 // import VideoPlayer from './components/VideoPlayerUser.tsx';
 
@@ -715,6 +716,16 @@ function Home() {
         <div className="details-metadata">
           {filteredArray.length > 0 && (
             <>
+               {/*Profile Picture ABOVE the Engager label */}
+               <div style={{ display: "flex", justifyContent: "center", marginBottom: "0.5rem" }}>
+               <ProfileWidget
+                userId={Number(localStorage.getItem("userId"))}
+                 isLoggedIn={!!localStorage.getItem("authToken")}
+                loginServer="http://localhost:3001"
+                />
+
+
+        </div>
               <h1>{currentVideoTitle}</h1>
               <h2>Engager: {currentVideoCreatorName}</h2>
               <h3>Uploaded: {currentVideoDate}</h3>

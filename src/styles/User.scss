@@ -277,3 +277,36 @@
     padding: 10px; // Reduce padding to better fit small screens
   }
 }
+
+.profile-picture-section {
+  margin: 1rem auto;
+  text-align: center;
+
+  img {
+    border-radius: 50%;
+    border: 2px solid #444;
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+  }
+
+  input[type="file"] {
+    margin-top: 10px;
+  }
+
+  button {
+    margin-top: 10px;
+    padding: 6px 12px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+

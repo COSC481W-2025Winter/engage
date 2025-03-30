@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom"; // Hook for programmatic navigat
 import { motion, AnimatePresence } from "framer-motion"; // Animation library for smooth UI transitions
 import { useSwipeable } from "react-swipeable"; // Library for handling touch and mouse swipe gestures
 import axios from "axios";
+import UserProfilePicture from "./components/UserProfilePicture"; // Import user profile picture component
+
 
 // Define the props interface for the `User` component
 // interface UserProps {
@@ -200,6 +202,12 @@ function User() {
         <a className="button warning" onClick={handleLogout}>
             <i className="fas fa-door-open"></i><span className="desktop__text"> Logout</span>
             </a>
+        </div>
+
+        {/* User profile picture component */}
+        <div className="profile-picture-section">
+            <UserProfilePicture userId={userID} loginServer={loginServer} mode="upload" />
+            <p style={{ textAlign: "center", marginTop: "0.5rem" }}>{username}</p>
         </div>
         
         <div className="content-container">

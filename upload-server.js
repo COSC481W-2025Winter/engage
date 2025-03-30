@@ -427,7 +427,49 @@ app.get("/get-replies", async (req, res) => {
   }
 });
 
+// ------------------------------
+// PROFILE PICTURE UPLOAD ENDPOINTS
+// ------------------------------
+
+const profilePicStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "./profile-pics");
+  },
+  filename: (req, file, cb) => {
+    const userId = req.user.userId;
+    cb(null, `${userId}${path.extname(file.originalname)}`);
+  },
+});
+
+const profilePicUpload = multer({ storage: profilePicStorage });
+
+app.post(
+  "/upload-profile-picture",
+  authenticateToken,
+  profilePicUpload.single("profilePicture"),
+  
+  (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+    return res.status(200).json({ message: "Upload successful" });
+  }
+);
+
+app.get("/profile-picture/:userId", (req, res) => {
+  const userId = req.params.userId;
+  const files = fs.readdirSync("./profile-pics");
+  const profileFile = files.find((f) => f.startsWith(userId));
+  if (profileFile) {
+    return res.sendFile(path.resolve(`./profile-pics/${profileFile}`));
+  } else {
+    return res.sendFile(path.resolve("./profile-pics/default.png"));
+  }
+});
+
+
 // Use server.listen instead of app.listen to enable socket.io
 server.listen(port, () => {
   console.log(`Upload Server is running at http://localhost:${port}`);
 });
+
