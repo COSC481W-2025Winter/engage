@@ -206,7 +206,7 @@ function User() {
 
         {/* User profile picture component */}
         <div className="profile-picture-section">
-            <UserProfilePicture userId={userID} loginServer={loginServer} mode="upload" />
+            <UserProfilePicture userId={userID} loginServer="http://localhost:3001" mode="upload" />
             <p style={{ textAlign: "center", marginTop: "0.5rem" }}>{username}</p>
         </div>
         

@@ -4,7 +4,7 @@ import axios from "axios";
 interface Props {
   userId: number;
   loginServer: string;
-  mode?: "upload" | "display"; // 👈 Optional mode control
+  mode?: "upload" | "display";
 }
 
 const UserProfilePicture: React.FC<Props> = ({ userId, loginServer, mode = "display" }) => {
@@ -12,25 +12,38 @@ const UserProfilePicture: React.FC<Props> = ({ userId, loginServer, mode = "disp
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
-    setImageUrl(`${loginServer}/profile-picture/${userId}`);
+    if (userId) {
+      setImageUrl(`${loginServer}/profile-picture/${userId}`);
+    }
   }, [userId, loginServer]);
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile) {
+      console.warn("No file selected!");
+      return;
+    }
+
     const token = localStorage.getItem("authToken");
     const formData = new FormData();
     formData.append("profilePicture", selectedFile);
 
+    console.log("Uploading to:", `${loginServer}/upload-profile-picture`);
+
     try {
-      await axios.post(`${loginServer}/upload-profile-picture`, formData, {
+      const res = await axios.post(`${loginServer}/upload-profile-picture`, formData, {
         headers: {
           Authorization: token,
           "Content-Type": "multipart/form-data",
         },
       });
-      setImageUrl(`${loginServer}/profile-picture/${userId}?v=${Date.now()}`); // refresh cache
+
+      console.log("Upload successful:", res.data);
+
+      // Refresh image cache with version
+      setImageUrl(`${loginServer}/profile-picture/${userId}?v=${Date.now()}`);
+      setSelectedFile(null);
     } catch (err) {
-      console.error("Upload failed", err);
+      console.error("Upload failed:", err);
     }
   };
 

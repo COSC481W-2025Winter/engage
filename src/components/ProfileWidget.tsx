@@ -25,6 +25,9 @@ const ProfileWidget: React.FC<Props> = ({ isLoggedIn, userId, loginServer }) => 
   const handleUpload = async () => {
     if (!selectedFile || !userId) return;
 
+    console.log("Triggered upload!");
+    console.log("Target:", `${loginServer}/upload-profile-picture`);
+
     const formData = new FormData();
     formData.append("profilePicture", selectedFile);
 

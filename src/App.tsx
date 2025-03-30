@@ -721,7 +721,7 @@ function Home() {
                <ProfileWidget
                 userId={Number(localStorage.getItem("userId"))}
                  isLoggedIn={!!localStorage.getItem("authToken")}
-                loginServer="http://localhost:3001"
+                loginServer={loginServer}
                 />
 
 
