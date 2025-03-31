@@ -77,14 +77,14 @@ CREATE TABLE comment_likes(
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE follows {
+CREATE TABLE follows (
     id INT PRIMARY KEY AUTO_INCREMENT,
     follower_id INT NOT NULL,
     following_id INT NOT NULL,
     followed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE
-}
+);
 
 CREATE TABLE notifications (
   id INT AUTO_INCREMENT PRIMARY KEY,
