@@ -936,7 +936,7 @@ app.post("/like-comment", authenticateTokenGet, (req, res) => {
             return res.status(500).json({ message: "Database error" });
           }
 
-          const creatorId = creatorResults[0].creator_id;
+          const creatorId = creatorResults[0].user_id;
           // Don't notify if user is liking their own content
           if (creatorId !== userId) {
             // Create notification
