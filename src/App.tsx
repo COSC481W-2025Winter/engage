@@ -22,6 +22,7 @@ import ProfileWidget from "./components/ProfileWidget";
 // Dynamically import all video files from the media folder
 const videos = import.meta.glob("../media/*trans.mp4");
 
+
 let uploadServer = "http://localhost:3001";
 if (import.meta.env.VITE_UPLOAD_SERVER !== undefined) {
   uploadServer = import.meta.env.VITE_UPLOAD_SERVER;
@@ -94,6 +95,7 @@ function Home() {
   const [currentVideo, setCurrentVideo] = useState("");
   const [notification, setNotification] = useState("");
   const [comment, setComment] = useState("");
+  const [profileRefresh, setProfileRefresh] = useState(0);
 
   // Comment type now includes an id, username, comment text, created_at, and optional replies.
   interface CommentType {
@@ -195,6 +197,15 @@ function Home() {
       displayComments();
     }
   }, [currentVideo]);
+
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      setProfileRefresh((prev) => prev + 1);
+    };
+    window.addEventListener("profile-updated", handleProfileUpdate);
+    return () => window.removeEventListener("profile-updated", handleProfileUpdate);
+  }, []);
+  
 
   useEffect(() => {
     const fetchReplyLikes = async () => {
@@ -696,6 +707,7 @@ function Home() {
           className={filteredArray.length < 2 ? "button greyed" : "button"}
           onClick={() => {
         const videoElement = document.getElementById("video");
+        
         if (videoElement && filteredArray.length >= 2) {
           videoElement.classList.remove("fade-in");
           videoElement.classList.add("fade-out");
@@ -719,16 +731,14 @@ function Home() {
                {/*Profile Picture ABOVE the Engager label */}
                <div style={{ display: "flex", justifyContent: "center", marginBottom: "0.5rem" }}>
                {loggedIn && userID !== 0 && (
+                
                 <ProfileWidget
-                userId={userID}
-                isLoggedIn={loggedIn}
-                loginServer="http://localhost:3001"
-              />
+                  userId={userID}  // Will be 0 if not logged in
+                  isLoggedIn={loggedIn}
+                  loginServer={uploadServer}
+                  key={profileRefresh}
+                />
       )}
-
-                <p style={{ color: "lime" }}>✅ Widget Rendered Here</p>
-
-
         </div>
               
               <h1>{currentVideoTitle}</h1>

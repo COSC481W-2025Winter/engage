@@ -8,7 +8,6 @@ import fs from "fs";
 import child_process from "child_process";
 import { Server } from "socket.io";
 import http from "http";
-
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -430,16 +429,26 @@ app.get("/get-replies", async (req, res) => {
 // ------------------------------
 // PROFILE PICTURE UPLOAD ENDPOINTS
 // ------------------------------
+app.use("/profile-picture", express.static("profile-pics"));
 
 const profilePicStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "./profile-pics");
+  destination: function (req, file, cb) {
+    cb(null, "profile-pics/");
   },
-  filename: (req, file, cb) => {
-    const userId = req.user.userId;
-    cb(null, `${userId}${path.extname(file.originalname)}`);
-  },
+  filename: function (req, file, cb) {
+    try {
+      const token = req.header("Authorization");
+      const decoded = jwt.verify(token, "secretkey");
+      const userId = decoded.userId;
+      cb(null, `${userId}.png`);
+    } catch (err) {
+      console.error("Failed to decode token in filename function:", err);
+      cb(new Error("Unauthorized"), "");
+    }
+  }
 });
+
+
 
 const profilePicUpload = multer({ storage: profilePicStorage });
 
@@ -457,11 +466,10 @@ app.post(
 );
 
 app.get("/profile-picture/:userId", (req, res) => {
-  const userId = req.params.userId;
-  const files = fs.readdirSync("./profile-pics");
-  const profileFile = files.find((f) => f.startsWith(userId));
-  if (profileFile) {
-    return res.sendFile(path.resolve(`./profile-pics/${profileFile}`));
+  const { userId } = req.params; // Extract userId from params
+  const filePath = `./profile-pics/${userId}.png`;
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(path.resolve(filePath));
   } else {
     return res.sendFile(path.resolve("./profile-pics/default.png"));
   }

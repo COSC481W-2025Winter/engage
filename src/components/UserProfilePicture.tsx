@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+/*import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 interface Props {
@@ -46,7 +46,7 @@ const UserProfilePicture: React.FC<Props> = ({ userId, loginServer, mode = "disp
       console.error("Upload failed:", err);
     }
   };
-
+{/*}
   return (
     <div style={{ textAlign: "center" }}>
       <img
@@ -60,21 +60,20 @@ const UserProfilePicture: React.FC<Props> = ({ userId, loginServer, mode = "disp
           objectFit: "cover",
         }}
       />
-      {mode === "upload" && (
-        <>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-            style={{ marginTop: "8px" }}
-          />
-          <button onClick={handleUpload} style={{ marginTop: "8px" }}>
-            Upload
-          </button>
-        </>
-      )}
-    </div>
-  );
-};
+     {/* Upload UI temporarily disabled for user page cleanup */}
+{/* 
+{mode === "upload" && (
+  <>
+    <input
+      type="file"
+      accept="image/*"
+      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+      style={{ marginTop: "8px" }}
+    />
+    <button onClick={handleUpload} style={{ marginTop: "8px" }}>
+      Upload
+    </button>
+  </>
+)} 
 
 export default UserProfilePicture;

@@ -1,54 +1,41 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-interface Props {
-  isLoggedIn: boolean;
-  userId?: number;
+interface ProfileWidgetProps {
+  userId: number;
   loginServer: string;
+  isLoggedIn: boolean;
 }
 
-const ProfileWidget: React.FC<Props> = ({ isLoggedIn, userId, loginServer }) => {
-  const [showPopup, setShowPopup] = useState(false);
+const ProfileWidget: React.FC<ProfileWidgetProps> = ({
+  userId,
+  loginServer,
+  isLoggedIn,
+}) => {
+  const [showUpload, setShowUpload] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imageUrl, setImageUrl] = useState<string>("");
+  const [imageUrl, setImageUrl] = useState(`${loginServer}/profile-picture/default.png`);
+  const [uploadStatus, setUploadStatus] = useState<"" | "success" | "fail">("");
+  const [refreshKey, setRefreshKey] = useState(0); // force refresh
 
-  // 🔍 Toggle popup state
-  const togglePopup = () => {
-    console.log("✅ React onClick triggered (togglePopup)");
-    setShowPopup((prev) => !prev);
+  // Load profile picture or default
+  useEffect(() => {
+    if (!isLoggedIn || userId === 0) {
+      setImageUrl(`${loginServer}/profile-picture/default.png`);
+    } else {
+      const newUrl = `${loginServer}/profile-picture/${userId}?v=${Date.now()}`;
+      setImageUrl(newUrl);
+    }
+  }, [userId, isLoggedIn, loginServer, refreshKey]);
+
+  const handleClick = () => {
+    if (!isLoggedIn) {
+      alert("Please log in to update profile picture");
+      return;
+    }
+    setShowUpload((prev) => !prev);
   };
 
-  // 🧪 Confirm component mounts and userId is passed in
-  useEffect(() => {
-    console.log("✅ ProfileWidget mounted with userId:", userId);
-    console.log("✅ loginServer:", loginServer);
-
-    // Add native listener to test if JS interference is causing issues
-    const el = document.getElementById("homepage-profile-pic");
-    if (el) {
-      el.addEventListener("click", () => {
-        console.log("🧪 Native JS listener triggered!");
-      });
-    }
-
-    // Optional cleanup
-    return () => {
-      if (el) {
-        el.removeEventListener("click", () => {});
-      }
-    };
-  }, []);
-
-  // Load profile image from server
-  useEffect(() => {
-    if (userId) {
-      const url = `${loginServer}/profile-picture/${userId}`;
-      setImageUrl(url);
-      console.log("🔁 Image URL set to:", url);
-    }
-  }, [userId, loginServer]);
-
-  // Handle file upload
   const handleUpload = async () => {
     if (!selectedFile || !userId) return;
 
@@ -56,80 +43,101 @@ const ProfileWidget: React.FC<Props> = ({ isLoggedIn, userId, loginServer }) => 
     const formData = new FormData();
     formData.append("profilePicture", selectedFile);
 
-    console.log("🚀 Uploading to:", `${loginServer}/upload-profile-picture`);
-
     try {
-      const res = await axios.post(`${loginServer}/upload-profile-picture`, formData, {
+      await axios.post(`${loginServer}/upload-profile-picture`, formData, {
         headers: {
           Authorization: token,
           "Content-Type": "multipart/form-data",
         },
       });
 
-      console.log("✅ Upload success:", res.data);
-      setImageUrl(`${loginServer}/profile-picture/${userId}?v=${Date.now()}`);
-      setSelectedFile(null);
+      // Force refresh image
+      setRefreshKey((prev) => prev + 1);
+
+      // Optional: notify parent
+      const refreshEvent = new CustomEvent("profile-updated");
+      window.dispatchEvent(refreshEvent);
+
+      setUploadStatus("success");
     } catch (err) {
-      console.error("❌ Upload failed:", err);
+      console.error("Upload failed", err);
+      setUploadStatus("fail");
     }
+
+    setTimeout(() => setUploadStatus(""), 3000);
   };
 
   return (
-    <div style={{ border: "4px dashed red", padding: "10px", zIndex: 9999 }}>
+    <div
+      onClick={handleClick}
+      style={{
+        position: "relative",
+        display: "inline-block",
+        cursor: isLoggedIn ? "pointer" : "default",
+        zIndex: 9999,
+        padding: "3px",
+        borderRadius: "50%",
+        backgroundColor: "#202020",
+        boxShadow: "0 0 4px rgba(0, 0, 0, 0.2)",
+        marginLeft: "auto",
+        marginRight: "20px",
+      }}
+    >
       <img
-        id="homepage-profile-pic"
-        src={imageUrl || "/profile-pics/default.png"}
+        key={refreshKey} // 🔥 Forces re-render!
+        src={imageUrl}
         alt="Profile"
-        onClick={() => {
-          console.log("IMG CLICK from React!");
-          togglePopup();
+        onError={(e) => {
+          e.currentTarget.onerror = null;
+          e.currentTarget.src = `${loginServer}/profile-picture/default.png`;
         }}
         style={{
-          width: "60px",
-          height: "60px",
+          width: "80px",
+          height: "80px",
           borderRadius: "50%",
-          cursor: "pointer",
-          border: "2px solid limegreen",
-          position: "relative",
-          zIndex: 9999,
-          pointerEvents: "auto",
+          objectFit: "cover",
+          display: "block",
         }}
       />
 
-      {showPopup && (
+      {isLoggedIn && showUpload && (
         <div
           style={{
             position: "absolute",
-            top: "70px",
-            right: 0,
-            backgroundColor: "#1a1a1a",
+            top: "100px",
+            right: "0",
+            backgroundColor: "#2a2a2a",
             color: "#fff",
-            padding: "10px",
-            borderRadius: "8px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+            padding: "10px 15px",
+            borderRadius: "10px",
+            boxShadow: "0 0 12px rgba(0, 0, 0, 0.4)",
             zIndex: 10000,
-            width: "200px",
+            width: "220px",
             textAlign: "center",
           }}
+          onClick={(e) => e.stopPropagation()}
         >
-          {isLoggedIn ? (
-            <>
-              <p>Change Profile Picture</p>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-              />
-              <button
-                onClick={handleUpload}
-                style={{ marginTop: "8px" }}
-                disabled={!selectedFile}
-              >
-                Upload
-              </button>
-            </>
-          ) : (
-            <p>Please log in to update profile picture</p>
+          <p>Change Profile Picture</p>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+          />
+          <button
+            onClick={handleUpload}
+            style={{ marginTop: "8px" }}
+            disabled={!selectedFile}
+          >
+            Upload
+          </button>
+
+          {uploadStatus === "success" && (
+            <p style={{ color: "lightgreen", marginTop: "8px" }}>
+              Upload successful!
+            </p>
+          )}
+          {uploadStatus === "fail" && (
+            <p style={{ color: "red", marginTop: "8px" }}>Upload failed.</p>
           )}
         </div>
       )}
