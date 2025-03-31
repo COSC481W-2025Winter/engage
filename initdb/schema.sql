@@ -3,7 +3,7 @@ use engage;
 
 CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
-username VARCHAR(30)  UNIQUE,
+    username VARCHAR(30)  UNIQUE,
     email VARCHAR(50) UNIQUE,
     password VARCHAR(250),
     role VARCHAR(10),
@@ -76,6 +76,15 @@ CREATE TABLE comment_likes(
     FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+CREATE TABLE follows {
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    follower_id INT NOT NULL,
+    following_id INT NOT NULL,
+    followed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE
+}
 
 CREATE TABLE notifications (
   id INT AUTO_INCREMENT PRIMARY KEY,
