@@ -255,15 +255,6 @@ function Home() {
   }, [currentVideo]);
 
   useEffect(() => {
-    const handleProfileUpdate = () => {
-      setProfileRefresh((prev) => prev + 1);
-    };
-    window.addEventListener("profile-updated", handleProfileUpdate);
-    return () => window.removeEventListener("profile-updated", handleProfileUpdate);
-  }, []);
-  
-
-  useEffect(() => {
     const fetchReplyLikes = async () => {
       if (!comments.length) return;
 
