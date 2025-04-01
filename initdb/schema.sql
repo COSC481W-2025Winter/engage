@@ -71,8 +71,21 @@ CREATE TABLE video_views (
 
 CREATE TABLE comment_likes(
     id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
     comment_id INT NOT NULL,
+    user_id INT NOT NULL,
     FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE notifications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  recipient_id INT NOT NULL,
+  sender_id INT,
+  content_id INT NOT NULL,
+  content_type ENUM('video', 'comment', 'reply') NOT NULL,
+  action_type ENUM('like', 'comment', 'reply', 'follow') NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (recipient_id) REFERENCES users(id),
+  FOREIGN KEY (sender_id) REFERENCES users(id)
 );

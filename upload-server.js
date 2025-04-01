@@ -343,14 +343,22 @@ app.post("/post-comment", authenticateToken, async (req, res) => {
   console.log("Comment:", comment);
   if (!video_id || !comment) {
     db.destroy();
-    return res.status(400).json({ message: "Video ID and comment are required" });
+    return res
+      .status(400)
+      .json({ message: "Video ID and comment are required" });
   }
   try {
-    const insertQuery = "INSERT INTO comments (user_id, video_id, content) VALUES (?, ?, ?)";
-    await db.promise().query(insertQuery, [userId, video_id, comment]);
+    const insertQuery =
+      "INSERT INTO comments (user_id, video_id, content) VALUES (?, ?, ?)";
+    const [result] = await db
+      .promise()
+      .query(insertQuery, [userId, video_id, comment]);
+    const commentId = result.insertId;
     console.log("Comment successfully stored in database!");
     db.destroy();
-    return res.status(200).json({ message: "Comment posted successfully!" });
+    return res
+      .status(200)
+      .json({ message: "Comment posted successfully!", commentId: commentId });
   } catch (error) {
     console.error("Error inserting comment:", error);
     db.destroy();
@@ -392,10 +400,13 @@ app.post("/post-reply", authenticateToken, async (req, res) => {
   const userId = req.user.userId;
   if (!comment_id || !reply) {
     db.destroy();
-    return res.status(400).json({ message: "Comment ID and reply content are required" });
+    return res
+      .status(400)
+      .json({ message: "Comment ID and reply content are required" });
   }
   try {
-    const insertQuery = "INSERT INTO reply (creator_id, content, comment_id) VALUES (?, ?, ?)";
+    const insertQuery =
+      "INSERT INTO reply (creator_id, content, comment_id) VALUES (?, ?, ?)";
     await db.promise().query(insertQuery, [userId, reply, comment_id]);
     db.destroy();
     return res.status(200).json({ message: "Reply posted successfully!" });

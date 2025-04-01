@@ -117,12 +117,15 @@ body {
   }
 }
 
-@media screen and (max-width: 1250px){
+@media screen and (max-width: 1300px){
   .desktop__text{
     display:none;
   }
   .mobile__text{
     display: block;
+  }
+  .comment-text{
+    display: none;
   }
   .button{
     padding: 10px;
