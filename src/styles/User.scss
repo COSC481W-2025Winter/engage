@@ -245,6 +245,90 @@
   border-radius: 8px; // Soft edges
 }
 
+.profile-picture-wrapper {
+  display: flex; // Positioning it absolutely to avoid layout shifts
+  align-items: center; // Centers the profile picture and upload controls
+  margin-right: 106rem; // Space between profile picture and upload controls
+  margin-top: -3rem; // Space between profile picture and upload controls
+  margin-bottom: 1rem; // Space between profile picture and upload controls
+}
+
+.profile-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid #444;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.upload-or-username {
+  margin-left: 0.5rem;
+}
+
+/* Container that stacks the "Select" and "Upload" buttons vertically */
+.upload-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+}
+
+/* The hidden input is displayed: none inline, but here's a fallback */
+.upload-controls input[type="file"] {
+  display: none;
+}
+
+/* Style the label to match the Upload button exactly */
+.file-button {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.9rem;
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+  box-sizing: border-box;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.file-button:hover {
+  background: rgba(52, 91, 199, 0.495);
+}
+
+/* The Upload button has the same styling */
+.upload-controls button {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.9rem;
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.upload-controls button:hover {
+  background: rgba(52, 91, 199, 0.495);
+}
+
+/* Username styling: white on desktop */
+.username-text {
+  font-size: 1rem;
+  color: white;
+  margin: 0;
+}
+
+/* Username styling: white on desktop */
+.username-text {
+  font-size: 1rem;
+  color: white;
+  margin: 0;
+}
+
+
 //  Mobile Responsiveness Adjustments
 @media (max-width: 768px) {
   .my-videos-container {
@@ -278,35 +362,22 @@
   }
 }
 
-.profile-picture-section {
-  margin: 1rem auto;
-  text-align: center;
-
-  img {
-    border-radius: 50%;
-    border: 2px solid #444;
-    width: 120px;
-    height: 120px;
-    object-fit: cover;
+/* profile picture for mobile */
+@media (max-width: 670px) {
+  .user-container {
+    padding-left: 10px; // Adjust if you need less space on mobile
   }
-
-  input[type="file"] {
-    margin-top: 10px;
+  
+  .profile-picture-wrapper {
+    position: absolute;  // Take it out of the normal flow so it doesn’t move with the video container
+    top: 60px;           // Adjust the top position as needed
+    left: 25px;      // Adjust the left position as needed (or use right if preferred)
+    width: 120px;        // Smaller profile area for mobile
+    gap: 0.3rem;         // Smaller gap between the image and upload controls
   }
-
-  button {
-    margin-top: 10px;
-    padding: 6px 12px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+  
+  /* Optionally hide the username on mobile if needed */
+  .username-text {
+    display: none;
   }
 }
-

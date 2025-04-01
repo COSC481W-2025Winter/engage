@@ -16,13 +16,14 @@ const ProfileWidget: React.FC<ProfileWidgetProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState(`${loginServer}/profile-picture/default.png`);
   const [uploadStatus, setUploadStatus] = useState<"" | "success" | "fail">("");
-  const [refreshKey, setRefreshKey] = useState(0); // force refresh
+  const [refreshKey, setRefreshKey] = useState(0); // Forces re-render to refresh image
 
-  // Load profile picture or default
+  // Update image URL – use default if not logged in or no valid userId.
   useEffect(() => {
     if (!isLoggedIn || userId === 0) {
       setImageUrl(`${loginServer}/profile-picture/default.png`);
     } else {
+      // Append a query parameter to force refresh when updated.
       const newUrl = `${loginServer}/profile-picture/${userId}?v=${Date.now()}`;
       setImageUrl(newUrl);
     }
@@ -30,7 +31,7 @@ const ProfileWidget: React.FC<ProfileWidgetProps> = ({
 
   const handleClick = () => {
     if (!isLoggedIn) {
-      alert("Please log in to update profile picture");
+      alert("Please log in to update your profile picture");
       return;
     }
     setShowUpload((prev) => !prev);
@@ -51,10 +52,10 @@ const ProfileWidget: React.FC<ProfileWidgetProps> = ({
         },
       });
 
-      // Force refresh image
+      // Force the image to refresh by updating refreshKey
       setRefreshKey((prev) => prev + 1);
 
-      // Optional: notify parent
+      // Optional: dispatch an event to notify other parts of the app
       const refreshEvent = new CustomEvent("profile-updated");
       window.dispatchEvent(refreshEvent);
 
@@ -84,7 +85,7 @@ const ProfileWidget: React.FC<ProfileWidgetProps> = ({
       }}
     >
       <img
-        key={refreshKey} // 🔥 Forces re-render!
+        key={refreshKey}
         src={imageUrl}
         alt="Profile"
         onError={(e) => {

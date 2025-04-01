@@ -204,12 +204,15 @@ function User() {
             </a>
         </div>
 
-        {/* User profile picture component 
         <div className="profile-picture-section">
-            <UserProfilePicture userId={userID} loginServer="http://localhost:3001" mode="upload" />
-            <p style={{ textAlign: "center", marginTop: "0.5rem" }}>{username}</p>
-        </div>
-        */}
+  <UserProfilePicture 
+    userId={userID} 
+    loginServer={uploadServer} 
+    mode="upload" 
+    username={username}
+  />
+</div>
+
         
         <div className="content-container">
           {/* Section title */}

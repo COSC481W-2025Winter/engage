@@ -466,7 +466,7 @@ app.post(
 );
 
 app.get("/profile-picture/:userId", (req, res) => {
-  const { userId } = req.params; // Extract userId from params
+  const { userId } = req.params;
   const filePath = `./profile-pics/${userId}.png`;
   if (fs.existsSync(filePath)) {
     return res.sendFile(path.resolve(filePath));

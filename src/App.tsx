@@ -15,7 +15,7 @@ import Terms from "./terms.tsx";
 import LikeButton from "./components/likeButton.tsx";
 import TopBar from "./components/TopBar.tsx";
 import RecoverAccount from "./recoverAccount.tsx";
-import ProfileWidget from "./components/ProfileWidget";
+
 // import { createContext, useContext } from 'react';
 // import VideoPlayer from './components/VideoPlayerUser.tsx';
 
@@ -95,7 +95,6 @@ function Home() {
   const [currentVideo, setCurrentVideo] = useState("");
   const [notification, setNotification] = useState("");
   const [comment, setComment] = useState("");
-  const [profileRefresh, setProfileRefresh] = useState(0);
 
   // Comment type now includes an id, username, comment text, created_at, and optional replies.
   interface CommentType {
@@ -728,19 +727,6 @@ function Home() {
         <div className="details-metadata">
           {filteredArray.length > 0 && (
             <>
-               {/*Profile Picture ABOVE the Engager label */}
-               <div style={{ display: "flex", justifyContent: "center", marginBottom: "0.5rem" }}>
-               {loggedIn && userID !== 0 && (
-                
-                <ProfileWidget
-                  userId={userID}  // Will be 0 if not logged in
-                  isLoggedIn={loggedIn}
-                  loginServer={uploadServer}
-                  key={profileRefresh}
-                />
-      )}
-        </div>
-              
               <h1>{currentVideoTitle}</h1>
               <h2>Engager: {currentVideoCreatorName}</h2>
               <h3>Uploaded: {currentVideoDate}</h3>
