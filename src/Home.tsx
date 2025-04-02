@@ -1,5 +1,5 @@
 import "./styles/App.scss"; // Import global and App-specific styles
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import ReactPlayer from "react-player";
 import path from "path-browserify";
