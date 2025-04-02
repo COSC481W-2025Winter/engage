@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import axios from "axios";
-import LikeButton from "./components/likeButton";
+import LikeButton from "../src/components/likeButton";
 
 // Mock axios
 vi.mock("axios");
