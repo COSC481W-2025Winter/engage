@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import NotificationBell from "../notificationBell";
 import axios from "axios";
+import VideoSearch from "../searchVideo";
+import handleSearchResultSelect from "../Home";
 
 let uploadServer = "http://localhost:3001";
 if (import.meta.env.VITE_UPLOAD_SERVER !== undefined) {
@@ -98,6 +100,9 @@ export default function TopBar() {
         </div>
         <div className="topbar__menu">
           <ul className="link__items">
+            <li>
+              <VideoSearch onResultSelect={handleSearchResultSelect} />
+            </li>
             <li>
               <a className="button" onClick={() => navigate("/upload")}>
                 <i className="fa-solid fa-upload persist"></i>{" "}

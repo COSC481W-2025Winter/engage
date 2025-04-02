@@ -24,7 +24,6 @@ if (import.meta.env.VITE_UPLOAD_SERVER !== undefined) {
   uploadServer = import.meta.env.VITE_UPLOAD_SERVER;
 }
 
-
 // Function to check if the auth token is expired
 function isTokenExpired(token: string) {
   try {
@@ -43,8 +42,6 @@ const token = localStorage.getItem("authToken");
 if (token && isTokenExpired(token)) {
   localStorage.removeItem("authToken");
 }
-
-
 
 function App() {
   return (
