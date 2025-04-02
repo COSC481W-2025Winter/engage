@@ -313,7 +313,7 @@ app.get("/video", (req, res) => {
 // Get video list
 app.get("/video-list", (req, res) => {
   const db = dbRequest(dbHost);
-  const selectQuery = "SELECT fileName FROM videos";
+  const selectQuery = "SELECT id, title, description, fileName FROM videos";
   db.query(selectQuery, (err, results) => {
     if (err) {
       console.error("Error fetching video from database: ", err);
