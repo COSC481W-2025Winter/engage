@@ -63,15 +63,47 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.logout__section{
-  width: 90vw;
-  height: 60px;
-  margin: 10px 10px;
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-  align-items: flex-end;
+// .logout__section{
+//   width: 90vw;
+//   height: 60px;
+//   margin: 10px 10px;
+//   display: flex;
+//   flex-direction: row;
+//   justify-content: flex-end;
+//   align-items: flex-end;
+// }
+
+// .follow__section{
+//   width: 90vw;
+//   height: 60px;
+//   margin: 10px 10px;
+//   display: flex;
+//   flex-direction: row;
+//   justify-content: flex-start;
+//   align-items: flex-start;
+// }
+
+.follow__section,
+.logout__section {
+  display: flex; // Ensure the sections are flex containers
+  align-items: center; // Vertically center the content
+  justify-content: center; // Center the content horizontally
+  height: auto; // Allow height to adjust based on content
+  width: auto; // Allow width to adjust based on content
+  height:50px;
+  margin: 0; // Remove any extra margins
 }
+
+.action-buttons {
+  display: flex; // Use flexbox for horizontal alignment
+  justify-content: space-between; // Place buttons on opposite ends
+  align-items: center; // Vertically center the buttons
+  width: 100%; // Match the width of `.content-container`
+  // max-width: 80vw; // Ensure it doesn't exceed the `.content-container` width
+  // margin: 0 auto; // Center the `.action-buttons` container
+  padding: 10px 0; // Add padding above and below the buttons
+}
+
 //  "My Videos" section title
 .my-videos-container {
   display: flex;

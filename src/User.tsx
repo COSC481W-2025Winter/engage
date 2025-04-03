@@ -195,11 +195,27 @@ function User() {
         }`}
         {...handlers}
       >
+        
+        <div className="action-buttons">
+
+        {/* Follow section
+        <div className="follow__section">
+          <a className="button follow">
+            <i className="fa-regular fa-circle-user"></i><span className="desktop__text"> Follow </span>
+          </a>
+        </div> */}
+
+        <div>
+          
+        </div>
+
         {/* Logout button */}
         <div className="logout__section">
-        <a className="button warning" onClick={handleLogout}>
+          <a className="button warning" onClick={handleLogout}>
             <i className="fas fa-door-open"></i><span className="desktop__text"> Logout</span>
-            </a>
+          </a>
+        </div>
+
         </div>
         
         <div className="content-container">

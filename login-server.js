@@ -1203,6 +1203,7 @@ app.post("/comment-notification", authenticateTokenGet, (req, res) => {
 });
 
 app.get("/comment-notification", authenticateTokenGet, (req, res) => {
+  const { videoId } = req.body;
   const userId = req.user.userId;
   const db = dbRequest(dbHost);
 
@@ -1228,6 +1229,100 @@ app.get("/comment-notification", authenticateTokenGet, (req, res) => {
     db.destroy();
     return res.status(200).json({ notifications: results });
   });
+});
+
+// Follow user endpoint
+app.post("/follow-user", authenticateTokenGet, (req, res) => {
+  const { fileName } = req.body; // Get the fileName from the request body
+  const userId = req.user.userId; // Get the authenticated user's ID
+  const db = dbRequest(dbHost);
+
+  if (!fileName) {
+    db.destroy();
+    return res.status(400).json({ message: "File name is required" });
+  }
+
+  // Step 1: Get the videoId from the fileName
+  getVideoIdFromFileName(db, fileName)
+    .then((videoId) => {
+      if (!videoId) {
+        db.destroy();
+        return res.status(404).json({ message: "Video not found" });
+      }
+
+      // Step 2: Get the creator_id (userId of the video creator)
+      const getCreatorQuery = "SELECT creator_id FROM videos WHERE id = ?";
+      db.query(getCreatorQuery, [videoId], (err, results) => {
+        if (err) {
+          console.error("Database error:", err);
+          db.destroy();
+          return res.status(500).json({ message: "Database error" });
+        }
+
+        if (results.length === 0) {
+          db.destroy();
+          return res.status(404).json({ message: "Video creator not found" });
+        }
+
+        const otherUserId = results[0].creator_id; // The userId of the video creator
+
+        // Step 3: Check if the user is trying to follow themselves
+        if (userId === otherUserId) {
+          db.destroy();
+          return res
+            .status(400)
+            .json({ message: "You cannot follow yourself" });
+        }
+
+        // Step 4: Check if the user is already following the other user
+        const checkFollowQuery =
+          "SELECT * FROM follows WHERE follower_id = ? AND following_id = ?";
+        db.query(checkFollowQuery, [userId, otherUserId], (err, results) => {
+          if (err) {
+            console.error("Database error:", err);
+            db.destroy();
+            return res.status(500).json({ message: "Database error" });
+          }
+
+          if (results.length > 0) {
+            // User is already following -> Unfollow
+            const unfollowQuery =
+              "DELETE FROM follows WHERE follower_id = ? AND following_id = ?";
+            db.query(unfollowQuery, [userId, otherUserId], (err) => {
+              if (err) {
+                console.error("Database error:", err);
+                db.destroy();
+                return res.status(500).json({ message: "Database error" });
+              }
+              db.destroy();
+              return res
+                .status(200)
+                .json({ message: "User unfollowed successfully" });
+            });
+          } else {
+            // User is not following, follow
+            const followQuery =
+              "INSERT INTO follows (follower_id, following_id) VALUES (?, ?)";
+            db.query(followQuery, [userId, otherUserId], (err) => {
+              if (err) {
+                console.error("Database error:", err);
+                db.destroy();
+                return res.status(500).json({ message: "Database error" });
+              }
+              db.destroy();
+              return res
+                .status(200)
+                .json({ message: "User followed successfully" });
+            });
+          }
+        });
+      });
+    })
+    .catch((error) => {
+      console.error("Error:", error.message);
+      db.destroy();
+      return res.status(400).json({ message: error.message });
+    });
 });
 
 // Register routes
