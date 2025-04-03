@@ -1,6 +1,7 @@
 import "./styles/App.scss"; // Import global and App-specific styles
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import Search from "./components/search.tsx";
 import Login from "./login.tsx";
 import Signup from "./signup.tsx";
 import PrivateRoute from "./PrivateRoute";
@@ -15,6 +16,10 @@ import Terms from "./terms.tsx";
 import LikeButton from "./components/likeButton.tsx";
 import TopBar from "./components/TopBar.tsx";
 import RecoverAccount from "./recoverAccount.tsx";
+import VideoSearch from "./searchVideo";
+import UserProfile from "./Guest.tsx";
+import UserSearch from "./userSearch.tsx";
+
 import { color } from "framer-motion";
 // import { createContext, useContext } from 'react';
 // import VideoPlayer from './components/VideoPlayerUser.tsx';
@@ -794,8 +799,26 @@ function Home() {
     setShowComments((prev) => !prev);
   };
 
+  // Function to handle search result selection
+  const handleSearchResultSelect = (fileName: string) => {
+    // Find the video index in array
+    const index = filteredArray.findIndex(
+      (path) => path && path.includes(fileName)
+    );
+
+    if (index !== -1) {
+      setVideoIndex(index);
+      // If needed, navigate to home page showing the video
+      if (window.location.pathname !== "/") {
+        navigate("/");
+      }
+    }
+  };
+
   return (
     <div className="app">
+      {/* Search container here */}
+      <VideoSearch onResultSelect={handleSearchResultSelect} />
       <div className="app-container">
         <div className="video-player">
           <ReactPlayer
@@ -878,6 +901,7 @@ function Home() {
             </div>
           </div>
         </div>
+
         <div className="video-details">
           <div className="details-metadata">
             {filteredArray.length > 0 && (
@@ -1143,6 +1167,8 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
         <Route path="/recover-account/:token" element={<RecoverAccount />} />
+        <Route path="/search" element={<UserSearch />} />
+        <Route path="/profile/:userId" element={<UserProfile />} />
         {/* User Page Route */}
 
         {/* Protected Route for Dashboard and Video Player */}

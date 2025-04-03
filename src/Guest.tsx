@@ -1,13 +1,11 @@
-import "./styles/User.scss"; // Import styles for component layout
-import { useState, useEffect, useRef } from "react"; // Added useRef for file input
+import React, { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
+import axios from "axios";
+import { useRef } from "react"; // Added useRef for file input
 import { useNavigate } from "react-router-dom"; // Hook for programmatic navigation
 import { motion, AnimatePresence } from "framer-motion"; // Animation library for smooth UI transitions
 import { useSwipeable } from "react-swipeable"; // Library for handling touch and mouse swipe gestures
-import axios from "axios";
-import { join } from "path";
-
-// Set the number of videos displayed per page
-const VIDEOS_PER_PAGE = 6;
+import "./styles/User.scss";
 
 let uploadServer = "http://localhost:3001";
 if (import.meta.env.VITE_UPLOAD_SERVER !== undefined) {
@@ -18,108 +16,35 @@ if (import.meta.env.VITE_LOGIN_SERVER !== undefined) {
   loginServer = import.meta.env.VITE_LOGIN_SERVER;
 }
 
-function User() {
-  // Grab, and set videos
+const UserProfile = () => {
+  // Set the number of videos displayed per page
+  const VIDEOS_PER_PAGE = 6;
+
+  const { userId } = useParams();
   const [userVideos, setUserVideos] = useState<string[]>([]);
-  const [username, setUsername] = useState("");
-  const [userID, setUserID] = useState(0);
   // New state for date joined
   const [dateJoined, setDateJoined] = useState("");
-  const [role, setRole] = useState("User"); // Default role is "User"
 
-  // New state for profile picture; using an online placeholder to ensure a visible image.
-  const [profilePictureUrl, setProfilePictureUrl] = useState<string>(
-    "https://via.placeholder.com/100"
-  );
-
-  // useRef for hidden file input
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  async function loadUserVideos() {
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      const userVideoArray: string[] = [];
-      try {
-        const response = await axios.get(`${loginServer}/get-user-videos`, {
-          params: {
-            auth: token ? token : "",
-          },
-        });
-        response.data.videos.forEach((element: { fileName: string }) => {
-          userVideoArray.push("./media/" + element.fileName);
-        });
-        setUserVideos(userVideoArray as string[]);
-      } catch (error) {
-        console.error("Error fetching user videos:", error);
-      }
-    }
+  interface UserProfile {
+    username: string;
+    role: string;
+    dateCreated: string | number | Date;
+    profilePictureUrl: string;
+    videoCount: number;
+    commentCount: number;
+    replyCount: number;
+    videos: {
+      id: string;
+      fileName: string;
+      thumbnail?: string;
+      title: string;
+      created_at: string | number | Date;
+    }[];
   }
 
-  useEffect(() => {
-    loadUserVideos();
-  }, []);
-
-  // Get logged in user ID
-  async function getLoggedInUserId() {
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      try {
-        await axios
-          .get(`${loginServer}/current-user-id`, {
-            params: {
-              auth: token ? token : "",
-            },
-          })
-          .then((response) => {
-            setUserID(response.data.userId as number);
-          });
-      } catch (error) {
-        console.error("Error fetching user ID:", error);
-        return null;
-      }
-    } else {
-      return null;
-    }
-  }
-  const formatDate = (dateString: string | number | Date) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  // Modified getUsername to also set the profile picture URL and date joined if available
-  async function getUsername(userid: number) {
-    let username = "";
-    await axios
-      .get(`${uploadServer}/user`, {
-        params: {
-          userID: userid,
-        },
-      })
-      .then((response) => {
-        username = response.data.username;
-        if (response.data.profilePictureUrl) {
-          setProfilePictureUrl(response.data.profilePictureUrl);
-        }
-        if (response.data.dateCreated) {
-          // Format date as day/month/year using en-GB locale
-          const joinDate = new Date(response.data.dateCreated);
-          const formattedDate = joinDate.toLocaleDateString("en-GB");
-          setDateJoined(formatDate(joinDate));
-        }
-      });
-    setUsername(username as string);
-    setRole("User"); // Set default role to "User"
-  }
-
-  useEffect(() => {
-    getLoggedInUserId();
-    getUsername(userID);
-  });
-
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const navigate = useNavigate(); // Hook for navigating between routes
 
   // State variables to manage video selection, page navigation, and animations
@@ -127,6 +52,10 @@ function User() {
   const [currentPage, setCurrentPage] = useState(0); // Tracks the current page number in the video list
   const [isJittering, setIsJittering] = useState(false); // Triggers a "jitter" effect if the user reaches the last/first page
   const [direction, setDirection] = useState(0); // Tracks swipe direction: -1 (left) or 1 (right) for smooth transitions
+  // New state for profile picture; using an online placeholder to ensure a visible image.
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string>(
+    "https://via.placeholder.com/100"
+  );
 
   // Calculate the total number of pages based on the number of videos
   const totalPages = Math.ceil(userVideos.length / VIDEOS_PER_PAGE);
@@ -157,13 +86,6 @@ function User() {
     } else {
       triggerJitter(); // Call jitter effect if no more pages
     }
-  };
-
-  const handleLogout = () => {
-    // Clear the authentication token from localStorage
-    localStorage.removeItem("authToken");
-    // Navigate to login page (force refresh the page)
-    window.location.href = "/";
   };
 
   /**
@@ -205,36 +127,66 @@ function User() {
     startIndex + VIDEOS_PER_PAGE
   );
 
-  // ----- Profile Picture Handlers -----
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8081";
 
-  // Opens the file dialog when the profile picture is clicked
-  const handleProfilePictureClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  // Handles the file upload and updates profile picture
-  const handleProfilePictureChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
-      const formData = new FormData();
-      formData.append("profilePicture", file);
-      formData.append("userId", userID.toString());
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      setLoading(true);
       try {
-        const response = await axios.post(
-          `${uploadServer}/upload-profile-picture`,
-          formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-          }
+        const response = await axios.get(
+          `${API_BASE_URL}/user-profile/${userId}`
         );
-        // Assume the backend returns the new profile picture URL and updates the user record
-        setProfilePictureUrl(response.data.profilePictureUrl);
-      } catch (error) {
-        console.error("Error uploading profile picture:", error);
+        setProfile(response.data.profile);
+        if (response.data.profile.profilePictureUrl) {
+          setProfilePictureUrl(response.data.profile.profilePictureUrl);
+        }
+        setError("");
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        setError("Failed to load user profile.");
+      } finally {
+        setLoading(false);
       }
+    };
+
+    if (userId) {
+      fetchUserProfile();
     }
+  }, [userId]);
+
+  if (loading) {
+    return <div className="user-profile__loading">Loading profile...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="user-profile__error">
+        <p>{error}</p>
+        <Link to="/search" className="user-profile__back-link">
+          &larr; Back to search
+        </Link>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="user-profile__not-found">
+        <p>User not found</p>
+        <Link to="/search" className="user-profile__back-link">
+          &larr; Back to search
+        </Link>
+      </div>
+    );
+  }
+
+  const formatDate = (dateString: string | number | Date) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };
 
   return (
@@ -246,37 +198,38 @@ function User() {
         }`}
         {...handlers}
       >
-        {/* Logout button */}
-        <div className="logout__section">
-          <a className="button warning" onClick={handleLogout}>
-            <i className="fas fa-door-open"></i>
-            <span className="desktop__text"> Logout</span>
-          </a>
-        </div>
-
         <div className="content-container">
-          {/* ----- Profile Picture Section with User Info ----- */}
           <div className="profile-picture-wrapper">
             <img
-              src={profilePictureUrl}
+              src={
+                profile.profilePictureUrl || "https://via.placeholder.com/100"
+              }
               alt="Profile"
               className="profile-picture"
-              onClick={handleProfilePictureClick}
-            />
-            <input
-              type="file"
-              accept="image/*"
-              style={{ display: "none" }}
-              ref={fileInputRef}
-              onChange={handleProfilePictureChange}
             />
             <div className="user-info">
-              <div className="username-display">{username}</div>
-              <div className="user-role">Role: {role}</div>
-              <div className="date-joined">Joined: {dateJoined}</div>
+              <div className="username-display">{profile.username}</div>
+              <div className="user-role">Role: {profile.role}</div>
+              <div className="date-joined">
+                Joined: {formatDate(profile.dateCreated)}
+              </div>
             </div>
           </div>
 
+          {/* <div className="user-profile__stats">
+            <div>
+              <span>{profile.videoCount}</span>
+              <p>Videos</p>
+            </div>
+            <div>
+              <span>{profile.commentCount}</span>
+              <p>Comments</p>
+            </div>
+            <div>
+              <span>{profile.replyCount}</span>
+              <p>Replies</p>
+            </div>
+          </div> */}
           {/* Engagements Section */}
           <div className="my-videos-container">
             <div className="text">
@@ -296,22 +249,22 @@ function User() {
           {/* AnimatePresence ensures smooth transition between pages */}
           <AnimatePresence mode="popLayout">
             <motion.div
-              key={currentPage} // Changes key on each page update to trigger animation
+              //key={currentPage} // Changes key on each page update to trigger animation
               className="video-grid"
               initial={{ x: direction * 100, opacity: 0 }} // Start position
               animate={{ x: 0, opacity: 1 }} // Target position (smooth slide-in effect)
               exit={{ x: direction * 100, opacity: 0 }} // Exit animation (smooth slide-out effect)
               transition={{ type: "spring", stiffness: 120, damping: 20 }} // Animation style
             >
-              {currentVideos.length > 0 ? (
-                currentVideos.map((video, index) => (
+              {profile.videos && profile.videos.length > 0 ? (
+                profile.videos.map((video) => (
                   <div
-                    key={index}
+                    key={video.id}
                     className="video-thumbnail"
-                    onClick={() => handleOpenVideo(video)} // Click to open fullscreen view
+                    onClick={() => handleOpenVideo(`/media/${video.fileName}`)} // Click to open fullscreen view
                   >
                     <motion.video
-                      src={video}
+                      src={`/media/${video.fileName}`}
                       className="thumbnail-video"
                       autoPlay
                       muted
@@ -356,6 +309,6 @@ function User() {
       </AnimatePresence>
     </div>
   );
-}
+};
 
-export default User;
+export default UserProfile;

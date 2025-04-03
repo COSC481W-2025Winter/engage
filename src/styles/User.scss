@@ -11,6 +11,47 @@
   align-items: center; // Centers content vertically
 }
 
+// ----- Profile Picture Styles & User Info -----
+// Display the profile picture and user info in one row
+.profile-picture-wrapper {
+  display: flex;
+  align-items: center; // Vertically center the items
+  margin: 20px 0 20px 20px; // Top, right, bottom, left margins
+}
+
+.profile-picture {
+  width: 100px; // Adjust size as needed
+  height: 100px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+/* New user info styling next to the profile picture */
+.user-info {
+  margin-left: 15px; // Space between image and text
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.username-display {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.date-joined {
+  font-size: 0.9rem;
+  color: #dddddd;
+}
+
+.user-role {
+  font-size: 0.9rem;
+  color: #dddddd;
+}
+
 //  Main container with smooth transition effects
 .user-container {
   display: flex;
@@ -63,7 +104,7 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.logout__section{
+.logout__section {
   width: 90vw;
   height: 60px;
   margin: 10px 10px;
@@ -87,7 +128,7 @@
   // margin-bottom: 10px;
   font-size: 1.4rem;
   font-weight: bold;
-  .button{
+  .button {
     font-size: 1.5rem;
     height: 40px;
     width: 80px;
@@ -192,17 +233,6 @@
   }
 }
 
-//  Username display (below the videos)
-.username-display {
-  margin-top: 4px;
-  font-size: 1rem;
-  color: #ffffff;
-  font-family: Arial, sans-serif;
-  font-weight: bold;
-}
-
-
-
 //  Home button styling with hover effects
 .home-button {
   margin-top: 2px;
@@ -250,7 +280,6 @@
   .my-videos-container {
     font-size: 1.2rem; // Adjust font size for smaller screens
     display: block;
-    
   }
   .video-grid {
     height: 45vh;
@@ -265,14 +294,9 @@
     width: 40vw;
     height: 13vh;
   }
-
-  // .home-button {
-  //   width: 100%; // Full-width button for easier tap access
-  // }
 }
 
 @media (max-width: 670px) {
-
   .user-container {
     padding: 10px; // Reduce padding to better fit small screens
   }

@@ -1151,6 +1151,124 @@ app.post("/notifications/mark-read", authenticateTokenGet, (req, res) => {
   });
 });
 
+// User search endpoint
+app.get("/search-users", (req, res) => {
+  const db = dbRequest(dbHost);
+  const { query } = req.query;
+
+  if (!query || query.trim() === "") {
+    db.destroy();
+    return res.status(400).json({ message: "Search query is required" });
+  }
+  // Use LIKE operator for partial matching with wildcards
+  const searchQuery = `
+SELECT id, username, email, role,profilePictureUrl, dateCreated
+FROM users
+WHERE username LIKE ?
+ORDER BY username
+LIMIT 20
+`;
+  // Add wildcards to search for partial matches
+  db.query(searchQuery, [`%${query}%`], (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      db.destroy();
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    db.destroy();
+    return res.status(200).json({ users: results });
+  });
+});
+
+// Get user profile by ID
+app.get("/user-profile/:userId", (req, res) => {
+  const db = dbRequest(dbHost);
+  const { userId } = req.params;
+
+  if (!userId) {
+    db.destroy();
+    return res.status(400).json({ message: "User ID is required" });
+  }
+
+  const userQuery = `
+    SELECT u.id, u.username, u.role, u.dateCreated, u.profilePictureUrl,
+      (SELECT COUNT(*) FROM videos WHERE creator_id = u.id) AS videoCount,
+      (SELECT COUNT(*) FROM comments WHERE user_id = u.id) AS commentCount,
+      (SELECT COUNT(*) FROM reply WHERE creator_id = u.id) AS replyCount
+    FROM users u
+    WHERE u.id = ?
+  `;
+
+  db.query(userQuery, [userId], (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      db.destroy();
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    if (results.length === 0) {
+      db.destroy();
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Get user's videos
+    const videosQuery = `
+      SELECT id, title, fileName, description, created_at
+      FROM videos
+      WHERE creator_id = ?
+      ORDER BY created_at DESC
+      LIMIT 10
+    `;
+
+    db.query(videosQuery, [userId], (videoErr, videos) => {
+      if (videoErr) {
+        console.error("Database error:", videoErr);
+        db.destroy();
+        return res.status(500).json({ message: "Database error" });
+      }
+
+      const userProfile = {
+        ...results[0],
+        videos: videos,
+      };
+
+      db.destroy();
+      return res.status(200).json({ profile: userProfile });
+    });
+  });
+});
+
+// Get user by username endpoint
+app.get("/user-by-username/:username", (req, res) => {
+  const db = dbRequest(dbHost);
+  const { username } = req.params;
+
+  if (!username) {
+    db.destroy();
+    return res.status(400).json({ message: "Username is required" });
+  }
+
+  const userQuery =
+    "SELECT id, username, role, dateCreated FROM users WHERE username = ?";
+
+  db.query(userQuery, [username], (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      db.destroy();
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    if (results.length === 0) {
+      db.destroy();
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    db.destroy();
+    return res.status(200).json({ user: results[0] });
+  });
+});
+
 // Register routes
 app.post("/signup", signup);
 app.post("/addReply", addReply);

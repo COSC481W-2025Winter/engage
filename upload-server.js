@@ -1,4 +1,4 @@
-import express from "express";
+import express from "express"; 
 import mysql from "mysql2";
 import multer from "multer";
 import path from "path";
@@ -38,6 +38,9 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// **** ADDED LINE: Serve static files from the media folder ****
+app.use('/media', express.static(path.join(process.cwd(), 'media')));
 
 // Set up multer storage configuration
 const storage = multer.diskStorage({
@@ -217,7 +220,6 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
         const db = dbRequest(dbHost);
         const insertQuery =
           "INSERT INTO videos (creator_id, title, description, fileName) VALUES (?, ?, ?, ?)";
-
         db.query(
           insertQuery,
           [creatorId, title, description, outputFile],
@@ -253,15 +255,31 @@ app.post("/upload", authenticateToken, upload.single("file"), (req, res) => {
   });
 });
 
-function deleteFile(filePath) {
-  fs.unlink(filePath, (err) => {
+// **** ADDED ENDPOINT: Upload Profile Picture ****
+app.post("/upload-profile-picture", upload.single("profilePicture"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+  const { userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ message: "User ID is required" });
+  }
+  // Construct the full URL for the uploaded file
+  const fileUrl = `http://localhost:${port}/media/${req.file.filename}`;
+  
+  const db = dbRequest(dbHost);
+  const updateQuery = "UPDATE users SET profilePictureUrl = ? WHERE id = ?";
+  db.query(updateQuery, [fileUrl, userId], (err, result) => {
+    db.destroy();
     if (err) {
-      console.error(`Error deleting file ${filePath}: `, err);
-    } else {
-      console.log(`File ${filePath} deleted successfully`);
+      console.error("Error updating user with profile picture: ", err);
+      return res.status(500).json({ message: "Database error", error: err });
     }
+    return res
+      .status(200)
+      .json({ message: "Profile picture uploaded successfully", profilePictureUrl: fileUrl });
   });
-}
+});
 
 // Get user info
 app.get("/user", (req, res) => {
@@ -313,7 +331,7 @@ app.get("/video", (req, res) => {
 // Get video list
 app.get("/video-list", (req, res) => {
   const db = dbRequest(dbHost);
-  const selectQuery = "SELECT fileName FROM videos";
+  const selectQuery = "SELECT id, title, description, fileName FROM videos";
   db.query(selectQuery, (err, results) => {
     if (err) {
       console.error("Error fetching video from database: ", err);
@@ -486,6 +504,16 @@ app.get("/get-replies", async (req, res) => {
     return res.status(500).json({ message: "Database error", error });
   }
 });
+
+function deleteFile(filePath) {
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      console.error(`Error deleting file ${filePath}: `, err);
+    } else {
+      console.log(`File ${filePath} deleted successfully`);
+    }
+  });
+}
 
 // Use server.listen instead of app.listen to enable socket.io
 server.listen(port, () => {
