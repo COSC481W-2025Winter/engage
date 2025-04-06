@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import "./styles/notification.scss";
 
 // Get the login server URL from environment variables
@@ -12,6 +13,7 @@ interface Notification {
   action_type: string;
   content_type: string;
   content_preview: string;
+  content_id: string;
   is_read: boolean;
   created_at: string;
 }
@@ -40,6 +42,7 @@ function formatNotificationMessage(notification: Notification): string {
 }
 
 export default function NotificationBell() {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -93,6 +96,27 @@ export default function NotificationBell() {
       fetchUnreadCount();
     } catch (error) {
       console.error("Error marking notifications as read:", error);
+    }
+  };
+
+  // Handle notification click with navigation
+  const handleNotificationClick = async (notification: Notification) => {
+    // Mark the notification as read
+    await markAsRead([notification.id]);
+
+    // Close the dropdown
+    setShowDropdown(false);
+
+    // Navigate based on content type
+    if (notification.content_type === "video") {
+      // Navigate to the video page
+      navigate(`/video/${notification.content_id}`);
+    } else if (
+      notification.content_type === "comment" ||
+      notification.content_type === "reply"
+    ) {
+      // Navigate to the video with focus on the comment
+      navigate(`/video/${notification.content_id}?comment=true`);
     }
   };
 
