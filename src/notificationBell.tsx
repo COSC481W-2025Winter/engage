@@ -8,6 +8,7 @@ const loginServer =
   import.meta.env.VITE_LOGIN_SERVER || "http://localhost:8081";
 
 interface Notification {
+  video_id: string;
   id: string;
   sender_username: string;
   action_type: string;
@@ -107,18 +108,34 @@ export default function NotificationBell() {
     // Close the dropdown
     setShowDropdown(false);
 
+    // Determine the correct video ID to navigate to
+    const videoId = getVideoIdForContent(notification);
+
+    if (!videoId) {
+      console.error("Could not determine video ID for navigation");
+      return;
+    }
+
     // Navigate based on content type
     if (notification.content_type === "video") {
       // Navigate to the video page
-      navigate(`/video/${notification.content_id}`);
-    } else if (
-      notification.content_type === "comment" ||
-      notification.content_type === "reply"
-    ) {
-      // Navigate to the video with focus on the comment
-      navigate(`/video/${notification.content_id}?comment=true`);
+      navigate(`/video/${videoId}`);
+    } else if (notification.content_type === "comment") {
+      // Navigate to the video with comment focus
+      navigate(`/video/${videoId}?comment=${notification.content_id}`);
+    } else if (notification.content_type === "reply") {
+      // Navigate to the video with reply focus
+      navigate(`/video/${videoId}?reply=${notification.content_id}`);
     }
   };
+
+  function getVideoIdForContent(notification: Notification): string | null {
+    if (notification.content_type === "video") {
+      return notification.content_id;
+    }
+
+    return notification.video_id || notification.content_id;
+  }
 
   useEffect(() => {
     fetchNotifications();
@@ -177,7 +194,7 @@ export default function NotificationBell() {
                   className={`notification-item ${
                     !notification.is_read ? "unread" : ""
                   }`}
-                  onClick={() => markAsRead([notification.id])}
+                  onClick={() => handleNotificationClick(notification)}
                 >
                   <p>{formatNotificationMessage(notification)}</p>
                   <span className="notification-time">
