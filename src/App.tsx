@@ -1,7 +1,7 @@
 import "./styles/App.scss"; // Import global and App-specific styles
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import Search from "./components/search.tsx";
+// import Search from "./components/search.tsx";
 import Login from "./login.tsx";
 import Signup from "./signup.tsx";
 import PrivateRoute from "./PrivateRoute";
@@ -18,13 +18,13 @@ import TopBar from "./components/TopBar.tsx";
 import RecoverAccount from "./recoverAccount.tsx";
 import UserProfile from "./userProfile.tsx";
 import CombinedSearch from "./combinedSearch.tsx";
-import UsernameLink from "./components/UsernameLink";
+// import UsernameLink from "./components/UsernameLink";
 import About from "./About.tsx";
 import Follow from "./components/follow.tsx"; // Import the Follow component
-import { color } from "framer-motion";
+// import { color } from "framer-motion";
 
 // Dynamically import all video files from the media folder
-const videos = import.meta.glob("../media/*trans.mp4");
+const videos = import.meta.glob("/media/*trans.mp4", { eager: true });
 
 let uploadServer = "http://localhost:3001";
 if (import.meta.env.VITE_UPLOAD_SERVER !== undefined) {
@@ -52,6 +52,7 @@ async function createVideoArray() {
     const ext = path.extname(videoKey).toLowerCase();
     if (ext === ".mp4") {
       const videoFileName: string = path.posix.basename(videoKey);
+      // vidPaths.push(videoKey);
       if (dbPaths.includes(videoFileName)) {
         vidPaths.push(videoKey);
       }
@@ -93,7 +94,7 @@ if (token && isTokenExpired(token)) {
 }
 
 function Home() {
-  const authToken = localStorage.getItem("authToken") || ""; // Retrieve the token from localStorage
+  // const authToken = localStorage.getItem("authToken") || ""; // Retrieve the token from localStorage
 
   const initState = filteredArray.length < 2 ? 0 : 1;
   const [videoIndex, setVideoIndex] = useState(initState);
@@ -103,15 +104,15 @@ function Home() {
   // Add a new state for showing/hiding comments
   const [showComments, setShowComments] = useState(false);
 
-  interface Notification {
-    id: number;
-    is_read: boolean;
-    [key: string]: any;
-  }
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  // interface Notification {
+  //   id: number;
+  //   is_read: boolean;
+  //   [key: string]: any;
+  // }
+  // const [notifications, setNotifications] = useState<Notification[]>([]);
+  // const [unreadCount, setUnreadCount] = useState(0);
+  // const [loading, setLoading] = useState(false);
+  // const [error, setError] = useState(null);
 
   
 
@@ -141,10 +142,10 @@ function Home() {
   }>({});
 
   const [loggedIn, setLoggedIn] = useState(false);
-  const [username, setUsername] = useState("");
+  // const [username, setUsername] = useState("");
   const [userID, setUserID] = useState(0);
   const [role, setRole] = useState("user")
-  const [likeCount, setLikeCount] = useState(0);
+  // const [likeCount, setLikeCount] = useState(0);
   const [liked, setLiked] = useState(false);
   const [viewCount, setViewCount] = useState(0);
   const [viewRecorded, setViewRecorded] = useState(false);
@@ -153,7 +154,7 @@ function Home() {
     [key: number]: number;
   }>({});
   const [replyLiked, setReplyLiked] = useState<{ [key: number]: boolean }>({});
-  const [replyCount, setReplyCount] = useState(0);
+  // const [replyCount, setReplyCount] = useState(0);
 
   const [commentLikeCount, setCommentLikeCount] = useState<{
     [key: number]: number;
@@ -171,7 +172,7 @@ function Home() {
   const [currentVideoDate, setCurrentVideoDate] = useState("");
   const [currentVideoCreatorName, setCurrentVideoCreatorName] = useState("");
   // New state for storing the creator ID (for the Follow button)
-  const [currentVideoCreatorId, setCurrentVideoCreatorId] = useState(0);
+  // const [currentVideoCreatorId, setCurrentVideoCreatorId] = useState(0);
 
   // Extract fileName from currentVideo
   const fileName = currentVideo.split("/").pop() || "";
@@ -241,7 +242,7 @@ function Home() {
         },
       });
       // Set creator id for Follow button
-      setCurrentVideoCreatorId(response.data.creator_id);
+      // setCurrentVideoCreatorId(response.data.creator_id);
       setCurrentVideoTitle(response.data.title);
       setCurrentVideoDesc(response.data.description);
       const username = await getUsername(response.data.creator_id);
@@ -436,13 +437,13 @@ function Home() {
   getLoggedInUserId();
 
 
-  async function assignUsername() {
-    if (loggedIn) {
-      const name = await getUsername(userID);
-      setUsername(name);
-    }
-  }
-  assignUsername();
+  // async function assignUsername() {
+  //   if (loggedIn) {
+  //     const name = await getUsername(userID);
+  //     setUsername(name);
+  //   }
+  // }
+  // assignUsername();
 
   useEffect(() => {
     const fetchRole = async () => {
@@ -567,7 +568,7 @@ function Home() {
       return;
     }
     try {
-      const response = await axios.post(
+      await axios.post(
         `${loginServer}/like-reply`,
         { fileName, reply_id },
         { params: { auth: token } }
@@ -608,7 +609,7 @@ function Home() {
       return;
     }
     try {
-      const response = await axios.post(
+      await axios.post(
         `${loginServer}/like-comment`,
         { fileName, comment_id },
         { params: { auth: token } }
@@ -836,7 +837,7 @@ function Home() {
                 }
                 loggedIn={loggedIn}
                 userId={userID}
-                initialLikeCount={likeCount}
+                // initialLikeCount={likeCount}
                 initialLiked={liked}
                 loginServer={loginServer}
               />

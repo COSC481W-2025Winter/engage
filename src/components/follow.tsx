@@ -10,10 +10,10 @@ let uploadServer = "http://localhost:3001";
 if (import.meta.env.VITE_UPLOAD_SERVER !== undefined) {
   uploadServer = import.meta.env.VITE_UPLOAD_SERVER;
 }
-let loginServer = "http://localhost:8081";
-if (import.meta.env.VITE_LOGIN_SERVER !== undefined) {
-  loginServer = import.meta.env.VITE_LOGIN_SERVER;
-}
+// let loginServer = "http://localhost:8081";
+// if (import.meta.env.VITE_LOGIN_SERVER !== undefined) {
+//   loginServer = import.meta.env.VITE_LOGIN_SERVER;
+// }
 
 const Follow: React.FC<FollowProps> = ({ fileName, loggedIn }) => {
   const [following, setFollowing] = useState(false);

@@ -1,7 +1,7 @@
 import { ChangeEvent, useState, useEffect } from "react";
 import axios from "axios";
 import "dotenv";
-import { io, Socket } from "socket.io-client";
+import { io } from "socket.io-client";
 import { v4 as uuidv4 } from "uuid";
 
 
@@ -38,7 +38,7 @@ export default function FileUploader() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [transcodingProgress, setTranscodingProgress] = useState(0);
   const [sessionId] = useState<string>(uuidv4()); // Generate unique session ID
-  const [socket, setSocket] = useState<Socket | null>(null);
+  // const [socket, setSocket] = useState<Socket | null>(null);
 
   // Connect to socket.io server
   useEffect(() => {
@@ -61,7 +61,7 @@ export default function FileUploader() {
       }
     });
 
-    setSocket(newSocket);
+    // setSocket(newSocket);
 
     // Clean up on unmount
     return () => {
@@ -92,24 +92,24 @@ export default function FileUploader() {
     return fileExtension === "mp4" || fileExtension === "mkv" || fileExtension === "mov";
   }
 
-  function durationLimit(file: File) {
-    return new Promise<boolean>((resolve) => {
-      const video = document.createElement("video");
-      video.preload = "metadata";
+  // function durationLimit(file: File) {
+  //   return new Promise<boolean>((resolve) => {
+  //     const video = document.createElement("video");
+  //     video.preload = "metadata";
 
-      video.onloadedmetadata = () => {
-      window.URL.revokeObjectURL(video.src);
-      const duration = video.duration;
-      resolve(duration <= 60); // Check if duration is under a minute
-      };
+  //     video.onloadedmetadata = () => {
+  //     window.URL.revokeObjectURL(video.src);
+  //     const duration = video.duration;
+  //     resolve(duration <= 60); // Check if duration is under a minute
+  //     };
 
-      video.onerror = () => {
-      resolve(false); // If there's an error, consider it invalid
-      };
+  //     video.onerror = () => {
+  //     resolve(false); // If there's an error, consider it invalid
+  //     };
 
-      video.src = URL.createObjectURL(file);
-    });
-  }
+  //     video.src = URL.createObjectURL(file);
+  //   });
+  // }
   async function handleFileUpload() {
     if (!file) return;
     if (!title){

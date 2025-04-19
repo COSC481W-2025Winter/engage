@@ -1,10 +1,10 @@
 import "./styles/User.scss"; // Import styles for component layout
 import { useState, useEffect, useRef } from "react"; // Added useRef for file input
-import { useNavigate } from "react-router-dom"; // Hook for programmatic navigation
+// import { useNavigate } from "react-router-dom"; // Hook for programmatic navigation
 import { motion, AnimatePresence } from "framer-motion"; // Animation library for smooth UI transitions
 import { useSwipeable } from "react-swipeable"; // Library for handling touch and mouse swipe gestures
 import axios from "axios";
-import { join } from "path";
+// import { join } from "path";
 
 // Set the number of videos displayed per page
 const VIDEOS_PER_PAGE = 6;
@@ -172,7 +172,7 @@ function User() {
         if (response.data.dateCreated) {
           // Format date as day/month/year using en-GB locale
           const joinDate = new Date(response.data.dateCreated);
-          const formattedDate = joinDate.toLocaleDateString("en-GB");
+          // const formattedDate = joinDate.toLocaleDateString("en-GB");
           setDateJoined(formatDate(joinDate));
         }
       });
@@ -186,7 +186,7 @@ function User() {
     fetchFollowCount();
   });
 
-  const navigate = useNavigate(); // Hook for navigating between routes
+  // const navigate = useNavigate(); // Hook for navigating between routes
 
 
   /**

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { useNavigate } from "react-router-dom"; // Hook for programmatic navigation
@@ -12,9 +12,9 @@ const VIDEOS_PER_PAGE = 6;
 
 const UserProfile = () => {
   const { userName } = useParams();
-  const [userVideos, setUserVideos] = useState<string[]>([]);
+  // const [userVideos, setUserVideos] = useState<string[]>([]);
   // New state for date joined
-  const [dateJoined, setDateJoined] = useState("");
+  // const [dateJoined, setDateJoined] = useState("");
 
   const [userID, setUserID] = useState(0);
   const [loggedInRole, setLoggedInRole] = useState("user");
@@ -47,9 +47,9 @@ const UserProfile = () => {
   const [isJittering, setIsJittering] = useState(false); // Triggers a "jitter" effect if the user reaches the last/first page
   const [direction, setDirection] = useState(0); // Tracks swipe direction: -1 (left) or 1 (right) for smooth transitions
   // New state for profile picture; using an online placeholder to ensure a visible image.
-  const [profilePictureUrl, setProfilePictureUrl] = useState<string>(
-    "https://via.placeholder.com/100"
-  );
+  // const [profilePictureUrl, setProfilePictureUrl] = useState<string>(
+  //   "https://via.placeholder.com/100"
+  // );
 
   // Calculate the total number of pages based on the number of videos
   const totalPages = Math.ceil(
@@ -134,9 +134,9 @@ const UserProfile = () => {
           `${API_BASE_URL}/user-profile-by-username/${userName}`
         );
         setProfile(response.data.profile);
-        if (response.data.profile.profilePictureUrl) {
-          setProfilePictureUrl(response.data.profile.profilePictureUrl);
-        }
+        // if (response.data.profile.profilePictureUrl) {
+        //   // setProfilePictureUrl(response.data.profile.profilePictureUrl);
+        // }
         setError("");
       } catch (err) {
         console.error("Error fetching profile:", err);

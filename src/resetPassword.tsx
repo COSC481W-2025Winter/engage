@@ -29,7 +29,7 @@ const ResetPassword: React.FC = () => {
     setError(null);
 
     try {
-      const response = await axios.post(
+      await axios.post(
       `${loginServer}/send-recovery-link`,
       {
         email,

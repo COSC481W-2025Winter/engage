@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import NotificationBell from "../notificationBell";
 import axios from "axios";
+import Logo from "/src/assets/icon.svg";
 
 let uploadServer = "http://localhost:3001";
 if (import.meta.env.VITE_UPLOAD_SERVER !== undefined) {
@@ -112,7 +113,7 @@ useEffect(() => {
           <a onClick={() => navigate("/")}>
             <img
               className="topbar__icon"
-              src="/src/assets/icon.svg"
+              src={Logo}
               alt="Engage Logo"
             />
             <h1 className="desktop__text">Engage</h1>
