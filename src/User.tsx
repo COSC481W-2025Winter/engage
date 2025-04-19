@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"; // Added useRef for file in
 import { motion, AnimatePresence } from "framer-motion"; // Animation library for smooth UI transitions
 import { useSwipeable } from "react-swipeable"; // Library for handling touch and mouse swipe gestures
 import axios from "axios";
+import defaultPFP from "/src/assets/engage default pfp.png";
 // import { join } from "path";
 
 // Set the number of videos displayed per page
@@ -167,7 +168,12 @@ function User() {
       .then((response) => {
         username = response.data.username;
         if (response.data.profilePictureUrl) {
-          setProfilePictureUrl(response.data.profilePictureUrl);
+          if(response.data.profilePictureUrl == "/src/assets/engage default pfp.png"){
+            setProfilePictureUrl(defaultPFP);
+          }
+          else{
+            setProfilePictureUrl(response.data.profilePictureUrl);
+          }
         }
         if (response.data.dateCreated) {
           // Format date as day/month/year using en-GB locale

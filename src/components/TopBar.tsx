@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import NotificationBell from "../notificationBell";
 import axios from "axios";
 import Logo from "/src/assets/icon.svg";
+import defaultPFP from "/src/assets/engage default pfp.png";
 
 let uploadServer = "http://localhost:3001";
 if (import.meta.env.VITE_UPLOAD_SERVER !== undefined) {
@@ -94,7 +95,12 @@ useEffect(() => {
         `${loginServer}/user-profile-by-username/${username}`
       );
       if (response.data.profile.profilePictureUrl) {
-        setProfilePicture(response.data.profile.profilePictureUrl);
+        if(response.data.profle.profilePictureUrl == "/src/assets/engage default pfp.png"){
+          setProfilePicture(defaultPFP);
+        }
+        else{
+          setProfilePicture(response.data.profile.profilePictureUrl);
+        }
       }
     } catch (err) {
       console.error("Error fetching profile:", err);

@@ -20,8 +20,16 @@ export default defineConfig({
     target: "esnext",
     rollupOptions: {
       input: {
-        main: "./index.html"
+        main: "./index.html",
       },
+      output: {
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name?.startsWith("media/")) {
+            return ""; // Prevent /media from being included
+          }
+          return assetInfo.name!;
+        }
+      }
     },
   },
 });
