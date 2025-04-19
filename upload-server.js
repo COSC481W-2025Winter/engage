@@ -312,9 +312,9 @@ app.get("/video-id-from-filename", async (req, res) => {
   }
 
   try {
-    console.log(fileName);
+    // console.log(fileName);
     const videoId = await getVideoIdFromFileName(db, fileName);
-    console.log(videoId);
+    // console.log(videoId);
     db.destroy();
     return res.status(200).json({ videoId });
   } catch (error) {
@@ -553,7 +553,7 @@ app.post("/post-comment", authenticateToken, async (req, res) => {
       return res.status(404).json({ message: "Video not found" });
     }
     const videoTitle = videos[0].title;
-    console.log(username + " commented " + '"' + comment + '"' + " on " + videoTitle);
+    console.log(username + " commented " + '"' + comment + '"' + " on video: " + videoTitle);
 
     // Get the video creator's ID
     const getVideoCreatorQuery = "SELECT creator_id FROM videos WHERE id = ?";
@@ -662,8 +662,21 @@ app.post("/post-reply", authenticateToken, async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     const username = userResults[0].username;
+    // Get the video title from the comment_id
+    const getVideoTitleQuery = `
+      SELECT v.title 
+      FROM videos v 
+      JOIN comments c ON v.id = c.video_id 
+      WHERE c.id = ?
+    `;
+    const [videoResults] = await db.promise().query(getVideoTitleQuery, [comment_id]);
+    if (videoResults.length === 0) {
+      db.destroy();
+      return res.status(404).json({ message: "Video not found" });
+    }
+    const videoTitle = videoResults[0].title;
 
-    console.log(`${username} posted a reply (${replyId}) that says "${reply}"`);
+    console.log(`${username} posted a reply (${replyId}) that says "${reply}" on video: ${videoTitle}`);
     db.destroy();
     return res
       .status(200)
